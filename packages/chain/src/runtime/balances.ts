@@ -11,8 +11,7 @@ interface BalancesConfig {
 export class Balances extends BaseBalances<BalancesConfig> {
   @state() public circulatingSupply = State.from<Balance>(Balance);
 
-  @runtimeMethod()
-  public addBalance(
+  public mintAndIncrementSupply(
     tokenId: TokenId,
     address: PublicKey,
     amount: Balance

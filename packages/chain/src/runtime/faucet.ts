@@ -1,7 +1,8 @@
-import { Balance, Balances, TokenId } from "@proto-kit/library";
+import { Balance, TokenId } from "@proto-kit/library";
 import { RuntimeModule, runtimeMethod, runtimeModule } from "@proto-kit/module";
-import { PublicKey } from "o1js";
+import { Provable, PublicKey } from "o1js";
 import { inject } from "tsyringe";
+import { Balances } from "./balances";
 
 @runtimeModule()
 export class Faucet extends RuntimeModule {
@@ -10,9 +11,7 @@ export class Faucet extends RuntimeModule {
   }
 
   public drip(tokenId: TokenId, address: PublicKey, amount: Balance) {
-    const currentBalance = this.balances.getBalance(tokenId, address);
-    const newBalance = currentBalance.add(amount);
-    this.balances.setBalance(tokenId, address, newBalance);
+    this.balances.mintAndIncrementSupply(tokenId, address, amount);
   }
 
   @runtimeMethod()

@@ -1,9 +1,9 @@
 import { PrivateKey } from "o1js";
-import { BalancesSnapshot } from "../src/runtime/balances-snapshot";
 import { TestingAppChain } from "@proto-kit/sdk";
 import { Balance, BalancesKey, TokenId } from "@proto-kit/library";
-import { modules } from "../src/runtime";
-import { Faucet } from "../src/runtime/faucet";
+import { config, modules } from "../../src/runtime";
+import { Faucet } from "../../src/runtime/faucet";
+import { fromRuntime } from "../testing-appchain";
 
 describe("faucet", () => {
   const alicePrivateKey = PrivateKey.random();
@@ -11,24 +11,19 @@ describe("faucet", () => {
   const tokenId = TokenId.from(0);
   const balanceToDrip = Balance.from(1000);
 
-  let appChain: ReturnType<typeof TestingAppChain.fromRuntime<typeof modules>>;
-  let balances: BalancesSnapshot;
+  let appChain: ReturnType<typeof fromRuntime<typeof modules>>;
   let faucet: Faucet;
 
   beforeAll(async () => {
-    appChain = TestingAppChain.fromRuntime(modules);
+    appChain = fromRuntime(modules);
 
     appChain.configurePartial({
-      Runtime: {
-        Balances: {},
-        Faucet: {},
-      },
+      Runtime: config,
     });
 
     await appChain.start();
     appChain.setSigner(alicePrivateKey);
 
-    balances = appChain.runtime.resolve("Balances");
     faucet = appChain.runtime.resolve("Faucet");
   });
 

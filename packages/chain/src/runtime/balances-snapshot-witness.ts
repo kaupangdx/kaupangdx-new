@@ -31,6 +31,7 @@ export class BalancesSnapshot extends Balances {
     Snapshot
   );
 
+  // TODO: store as {tokenId, publicKey} -> snapshotId
   @state() latestAddressSnapshots = StateMap.from<PublicKey, SnapshotId>(
     PublicKey,
     SnapshotId
@@ -42,6 +43,7 @@ export class BalancesSnapshot extends Balances {
     this.currentSnapshotId.set(newSnapshotId);
   }
 
+  // TODO: dont trigger this
   public setBalance(
     // onBalanceChange
     tokenId: TokenId,
