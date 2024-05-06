@@ -1,15 +1,32 @@
-import { UInt64 } from "@proto-kit/library";
+import { Balance, UInt64 } from "@proto-kit/library";
 import {
   BlockProverExecutionData,
   ProvableTransactionHook,
   State,
+  StateMap,
   protocolState,
 } from "@proto-kit/protocol";
-import { Bool, Field, Provable } from "o1js";
-import { injectable } from "tsyringe";
+import { Field, Poseidon, Provable } from "o1js";
+import { inject, injectable } from "tsyringe";
+import { modules } from "../runtime";
+import { Runtime } from "@proto-kit/module";
+import { Balances } from "../runtime/balances";
 
 export class GovernancePeriod extends Field {}
 export class BlockHeight extends UInt64 {}
+export class GovernancePeriodId extends Field {
+  public static fromGovernancePeriod(
+    blockHeight: BlockHeight,
+    period: GovernancePeriod
+  ) {
+    return GovernancePeriodId.from(
+      Poseidon.hash([
+        ...BlockHeight.toFields(blockHeight),
+        ...GovernancePeriod.toFields(period),
+      ])
+    );
+  }
+}
 
 export interface GovernanceLifecycleBlockHookConfig {
   /**
@@ -41,6 +58,20 @@ export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<
 
   @protocolState() public currentGovernancePeriodStartedAtBlock =
     State.from(BlockHeight);
+
+  @protocolState() public circulatingSupplySnapshots = StateMap.from<
+    GovernancePeriodId,
+    Balance
+  >(GovernancePeriodId, Balance);
+
+  public balances: Balances;
+
+  public constructor(
+    @inject("Runtime") public runtime: Runtime<typeof modules>
+  ) {
+    super();
+    this.balances = runtime.resolve("Balances");
+  }
 
   public onTransaction({ networkState }: BlockProverExecutionData) {
     const currentGovernancePeriod = this.currentGovernancePeriod
@@ -94,8 +125,19 @@ export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<
       currentGovernancePeriod
     );
 
+    const circulatingSupply = Balance.from(
+      this.balances.circulatingSupply.get().value
+    );
+
     // update the state with the determined governance period
     this.currentGovernancePeriod.set(nextGovernancePeriod);
     this.currentGovernancePeriodStartedAtBlock.set(currentBlockHeight);
+    this.circulatingSupplySnapshots.set(
+      GovernancePeriodId.fromGovernancePeriod(
+        currentGovernancePeriodStartedAtBlock,
+        currentGovernancePeriod
+      ),
+      circulatingSupply
+    );
   }
 }

@@ -21,7 +21,7 @@ describe("locks", () => {
 
   let locks: Locks;
 
-  async function query() {
+  async function queryNetwork() {
     return {
       network: await appChain.query.network.unproven,
     };
@@ -105,7 +105,7 @@ describe("locks", () => {
     });
 
     it("should create a lock", async () => {
-      const { network } = await query();
+      const { network } = await queryNetwork();
       const currentBlockHeight = network?.block.height;
 
       if (!currentBlockHeight) throw new Error("Block height not found");

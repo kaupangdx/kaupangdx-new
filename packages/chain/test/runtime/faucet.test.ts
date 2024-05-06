@@ -1,5 +1,4 @@
 import { PrivateKey } from "o1js";
-import { TestingAppChain } from "@proto-kit/sdk";
 import { Balance, BalancesKey, TokenId } from "@proto-kit/library";
 import { config, modules } from "../../src/runtime";
 import { Faucet } from "../../src/runtime/faucet";

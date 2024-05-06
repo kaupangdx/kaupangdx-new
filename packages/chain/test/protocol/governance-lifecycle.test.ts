@@ -47,14 +47,9 @@ describe("governance lifecycle", () => {
     });
 
     describe("automated transition", () => {
-      // transaction + block produced to kick in the period transition
-      beforeAll(async () => {
-        await drip(appChain, alicePrivateKey, tokenId, amount);
-        await appChain.produceBlock();
-      });
-
       it.each([
         // formatted as: [currentGovernancePeriod, currentGovernancePeriodStartedAtBlock]
+        [0, 0],
         [1, 1],
         [2, 2],
         [3, 3],

@@ -6,12 +6,14 @@ import { BlockHeight, Locks } from "./locks";
 import { RuntimeModulesRecord } from "@proto-kit/module";
 import { Balances } from "./balances";
 import { SetDelegateProposal } from "./governance/set-delegate-proposal";
+import { OutgoingMessages } from "./outgoing-messages";
 
 export const modules = {
   Faucet,
   Locks,
   Balances: Balances,
   SetDelegateProposal,
+  OutgoingMessages,
 };
 
 export const config: ModulesConfig<
@@ -25,8 +27,10 @@ export const config: ModulesConfig<
   SetDelegateProposal: {
     stakeTokenId: 0n,
     maximumAllowedConvictionMultiplier: 3n,
-    minimalRequiredWeightToPropose: 10000n,
+    precisionDivider: 1000000n, // equivalent to 0,000001%
+    minimalRequiredWeightPercentageToPropose: 1n,
   },
+  OutgoingMessages: {},
 };
 
 export default {
