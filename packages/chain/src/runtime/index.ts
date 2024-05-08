@@ -1,12 +1,12 @@
-import { Balance, TokenId, VanillaRuntimeModules } from "@proto-kit/library";
-import { BalancesSnapshot } from "./balances-snapshot-simple";
+import { Balance, VanillaRuntimeModules } from "@proto-kit/library";
 import { Faucet } from "./faucet";
 import { ModulesConfig } from "@proto-kit/common";
-import { BlockHeight, Locks } from "./locks";
-import { RuntimeModulesRecord } from "@proto-kit/module";
+import { Locks } from "./locks";
 import { Balances } from "./balances";
 import { SetDelegateProposal } from "./governance/set-delegate-proposal";
 import { OutgoingMessages } from "./outgoing-messages";
+import { TokenRegistry } from "./token-registry";
+import { XYK } from "./xyk/xyk";
 
 export const modules = {
   Faucet,
@@ -14,6 +14,8 @@ export const modules = {
   Balances: Balances,
   SetDelegateProposal,
   OutgoingMessages,
+  TokenRegistry,
+  XYK,
 };
 
 export const config: ModulesConfig<
@@ -31,6 +33,11 @@ export const config: ModulesConfig<
     minimalRequiredWeightPercentageToPropose: 1n,
   },
   OutgoingMessages: {},
+  TokenRegistry: {},
+  XYK: {
+    feeDivider: 1000n,
+    fee: 3n, //
+  },
 };
 
 export default {

@@ -13,7 +13,7 @@ import {
   GovernancePeriod,
   GovernancePeriodId,
 } from "../../protocol/governance-lifecycle";
-import { Balance, UInt64 } from "@proto-kit/library";
+import { Balance, TokenId, UInt64 } from "@proto-kit/library";
 import { Balances } from "../balances";
 import { OutgoingMessages, OutgoingMessagesCursor } from "../outgoing-messages";
 
@@ -75,8 +75,8 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
   }
 
   public getMinimalRequiredWeightToPropose() {
-    const circulatingSupply = this.balances.circulatingSupply.get().value;
-    const minimalRequiredWeightToPropose = Balance.from(circulatingSupply.value)
+    const totalSupply = this.balances.totalSupply.get(TokenId.from(0n)).value;
+    const minimalRequiredWeightToPropose = Balance.from(totalSupply.value)
       .mul(this.config.minimalRequiredWeightPercentageToPropose)
       .div(this.config.precisionDivider);
 
@@ -269,21 +269,20 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
   public execute(proposalId: ProposalId) {
     const isProposalExecuted = this.executedProposals.get(proposalId).isSome;
     const proposalLastVotedAt = this.proposalLastVotedAt.get(proposalId).value;
-    const circulatingSupplySnapshot = Balance.from(
-      this.governanceLifecycle.circulatingSupplySnapshots.get(
-        proposalLastVotedAt
-      ).value
+    const totalSupplySnapshot = Balance.from(
+      this.governanceLifecycle.totalSupplySnapshots.get(proposalLastVotedAt)
+        .value
     );
 
     const votes = this.votes.get(proposalId).value;
     const totalVotes = UInt64.from(votes.nay).add(votes.yay);
 
     Provable.log("execute", {
-      circulatingSupplySnapshot,
-      div: circulatingSupplySnapshot.div(100),
+      totalSupplySnapshot,
+      div: totalSupplySnapshot.div(100),
     });
 
-    const participationPercentageDivider = circulatingSupplySnapshot.div(100);
+    const participationPercentageDivider = totalSupplySnapshot.div(100);
     const isParticipationPercentageDividerZero =
       participationPercentageDivider.value.equals(0n);
     const adjustedParticipationPercentageDivider = UInt64.from(

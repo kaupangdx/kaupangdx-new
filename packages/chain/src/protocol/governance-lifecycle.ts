@@ -1,4 +1,4 @@
-import { Balance, UInt64 } from "@proto-kit/library";
+import { Balance, TokenId, UInt64 } from "@proto-kit/library";
 import {
   BlockProverExecutionData,
   ProvableTransactionHook,
@@ -59,7 +59,7 @@ export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<
   @protocolState() public currentGovernancePeriodStartedAtBlock =
     State.from(BlockHeight);
 
-  @protocolState() public circulatingSupplySnapshots = StateMap.from<
+  @protocolState() public totalSupplySnapshots = StateMap.from<
     GovernancePeriodId,
     Balance
   >(GovernancePeriodId, Balance);
@@ -125,19 +125,19 @@ export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<
       currentGovernancePeriod
     );
 
-    const circulatingSupply = Balance.from(
-      this.balances.circulatingSupply.get().value
+    const totalSupply = Balance.from(
+      this.balances.totalSupply.get(TokenId.from(0n)).value
     );
 
     // update the state with the determined governance period
     this.currentGovernancePeriod.set(nextGovernancePeriod);
     this.currentGovernancePeriodStartedAtBlock.set(currentBlockHeight);
-    this.circulatingSupplySnapshots.set(
+    this.totalSupplySnapshots.set(
       GovernancePeriodId.fromGovernancePeriod(
         currentGovernancePeriodStartedAtBlock,
         currentGovernancePeriod
       ),
-      circulatingSupply
+      totalSupply
     );
   }
 }
