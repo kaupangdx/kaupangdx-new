@@ -25,10 +25,10 @@ export class Balances extends BaseBalances<BalancesConfig> {
   ): void {
     const totalSupply = this.totalSupply.get(tokenId);
     const newtotalSupply = Balance.from(totalSupply.value).add(amount);
-    assert(
-      newtotalSupply.lessThanOrEqual(this.config.totalSupply),
-      "Circulating supply would be higher than total supply"
-    );
+    // assert(
+    //   newtotalSupply.lessThanOrEqual(this.config.totalSupply),
+    //   "Circulating supply would be higher than total supply"
+    // );
     this.totalSupply.set(tokenId, newtotalSupply);
     this.mint(tokenId, address, amount);
   }

@@ -90,6 +90,8 @@ export const useChainStore = create<ChainState, [["zustand/immer", never]]>(
 
       const { data } = (await response.json()) as BlockQueryResponse;
 
+      console.log("block", data.block.txs);
+
       set((state) => {
         state.loading = false;
         state.block = data.network.unproven

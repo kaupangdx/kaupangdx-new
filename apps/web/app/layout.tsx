@@ -1,14 +1,9 @@
 "use client";
 import "./globals.css";
-import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
-
 import AsyncLayoutDynamic from "@/containers/async-layout-dynamic";
-
-export const fontSans = FontSans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 
 export default function RootLayout({
   children,
@@ -20,7 +15,7 @@ export default function RootLayout({
       <body
         className={cn(
           "h-full bg-background font-sans antialiased",
-          fontSans.variable,
+          GeistSans.className,
         )}
       >
         <AsyncLayoutDynamic>{children}</AsyncLayoutDynamic>

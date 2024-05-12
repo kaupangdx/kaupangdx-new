@@ -68,10 +68,7 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
     @inject("Protocol") public protocol: Protocol<any>
   ) {
     super();
-    this.governanceLifecycle = this.protocol.resolveOrFail(
-      "GovernanceLifecycle",
-      GovernanceLifecycleTransactionHook
-    );
+    this.governanceLifecycle = this.protocol.resolve("GovernanceLifecycle");
   }
 
   public getMinimalRequiredWeightToPropose() {

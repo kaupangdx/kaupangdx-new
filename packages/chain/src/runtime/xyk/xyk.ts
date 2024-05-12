@@ -1,4 +1,3 @@
-import { NoConfig } from "@proto-kit/common";
 import {
   RuntimeModule,
   runtimeMethod,
@@ -7,7 +6,7 @@ import {
 } from "@proto-kit/module";
 import { StateMap, assert } from "@proto-kit/protocol";
 import { PoolKey } from "./pool-key";
-import { Field, Provable, PublicKey, Struct, Token } from "o1js";
+import { Provable, PublicKey, Struct, UInt64 as O1UInt64, Bool } from "o1js";
 import { inject } from "tsyringe";
 import { Balance, TokenId, UInt64 } from "@proto-kit/library";
 import { TokenPair } from "./token-pair";
@@ -28,7 +27,7 @@ export const errors = {
 };
 
 // we need a placeholder pool value until protokit supports value-less dictonaries or state arrays
-export const placeholderPoolValue = Field.from(1);
+export const placeholderPoolValue = Bool(true);
 
 export const MAX_PATH_LENGTH = 3;
 export class TokenIdPath extends Struct({
@@ -46,7 +45,7 @@ export interface XYKConfig {
 @runtimeModule()
 export class XYK extends RuntimeModule<XYKConfig> {
   // all existing pools in the system
-  @state() public pools = StateMap.from<PoolKey, Field>(PoolKey, Field);
+  @state() public pools = StateMap.from<PoolKey, Bool>(PoolKey, Bool);
 
   /**
    * Provide access to the underlying Balances runtime to manipulate balances
@@ -132,8 +131,8 @@ export class XYK extends RuntimeModule<XYKConfig> {
     tokenBAmountLimit: Balance
   ) {
     const tokenPair = TokenPair.from(tokenAId, tokenBId);
-    tokenAId = tokenPair.tokenAId;
-    tokenBId = tokenPair.tokenBId;
+    // tokenAId = tokenPair.tokenAId;
+    // tokenBId = tokenPair.tokenBId;
     const poolKey = PoolKey.fromTokenPair(tokenPair);
     const poolDoesExists = this.poolExists(poolKey);
     const amountANotZero = tokenAAmount.greaterThan(Balance.from(0));

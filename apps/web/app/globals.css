@@ -24,9 +24,8 @@
     --input: 240 5.9% 90%;
     --ring: 240 5.9% 10%;
     --radius: 0.5rem;
-  }
 
-  .dark {
+    /* dark */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
@@ -56,4 +55,18 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"] {
+    -webkit-appearance: none;
+    margin: 0;
+    -moz-appearance: textfield !important;
+  }
+}
+
+div[role="menubar"] {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
 }

@@ -18,4 +18,26 @@ export class Faucet extends RuntimeModule {
   public dripSigned(tokenId: TokenId, amount: Balance) {
     this.drip(tokenId, this.transaction.sender.value, amount);
   }
+
+  // testing method for the UI
+  @runtimeMethod()
+  public dripBundle() {
+    this.drip(
+      TokenId.from("0"),
+      this.transaction.sender.value,
+      Balance.from(1000n * 10n ** 2n)
+    );
+
+    this.drip(
+      TokenId.from("1"),
+      this.transaction.sender.value,
+      Balance.from(1000n * 10n ** 2n)
+    );
+
+    this.drip(
+      TokenId.from("2"),
+      this.transaction.sender.value,
+      Balance.from(1000n * 10n ** 2n)
+    );
+  }
 }

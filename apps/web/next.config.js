@@ -17,6 +17,7 @@ const nextConfig = {
     return config;
   },
   compress: false,
+  transpilePackages: ["geist"],
 };
 
 module.exports = nextConfig;

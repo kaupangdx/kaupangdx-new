@@ -1,24 +1,77 @@
 "use client";
-import { Faucet } from "@/components/faucet";
-import { useFaucet } from "@/lib/stores/balances";
-import { useWalletStore } from "@/lib/stores/wallet";
+import { SwapForm } from "@/components/xyk/swap-form";
+
+import { Home as HomeComponent } from "@/components/home";
+import { Balances, Wallet } from "@/components/wallet/wallet";
+import { useEffect, useMemo, useState } from "react";
+import { useNotifyTransactions, useWalletStore } from "@/lib/stores/wallet";
+import {
+  useBalancesStore,
+  useFaucet,
+  useObserveBalance,
+} from "@/lib/stores/balances";
+import { useChainStore, usePollBlockHeight } from "@/lib/stores/chain";
+import { tokens } from "@/tokens";
+import { useClientStore } from "@/lib/stores/client";
+import { FaucetForm } from "@/components/faucet/faucet-form";
+import { AddLiquidityForm } from "./xyk/add-liquidity-form";
 
 export default function Home() {
-  const wallet = useWalletStore();
-  const drip = useFaucet();
+  const { connectWallet, wallet, observeWalletChange, initializeWallet } =
+    useWalletStore();
+  const client = useClientStore();
+
+  const {
+    balances,
+    loading: balancesLoading,
+    clearBalances,
+  } = useBalancesStore();
+  const { block } = useChainStore();
+  usePollBlockHeight();
+
+  useNotifyTransactions();
+
+  useEffect(() => {
+    wallet && clearBalances(wallet);
+  }, [wallet]);
+  Object.keys(tokens).forEach((tokenId) => {
+    useObserveBalance(tokenId, wallet);
+  });
+
+  useEffect(() => {
+    client.start();
+    observeWalletChange();
+    initializeWallet();
+  }, []);
+
+  const ownBalances = wallet ? balances[wallet] : {};
+
+  const loading =
+    balancesLoading && !!(wallet && balances[wallet]?.["0"] === undefined);
+
+  const faucet = useFaucet();
 
   return (
-    <div className="mx-auto -mt-32 h-full pt-16">
-      <div className="flex h-full w-full items-center justify-center pt-16">
-        <div className="flex basis-4/12 flex-col items-center justify-center 2xl:basis-3/12">
-          <Faucet
-            wallet={wallet.wallet}
-            onConnectWallet={wallet.connectWallet}
-            onDrip={drip}
-            loading={false}
+    <>
+      <HomeComponent
+        // swapForm={<SwapForm />}
+        swapForm={<>swap</>}
+        faucetForm={<FaucetForm />}
+        addLiquidityForm={<AddLiquidityForm />}
+        wallet={
+          <Wallet
+            loading={loading}
+            blockHeight={block?.height}
+            address={wallet}
+            balances={ownBalances}
+            onConnectWallet={async () => {
+              await connectWallet();
+            }}
+            forceIsWalletOpen={!!wallet}
+            onFaucetDrip={() => client.client && wallet && faucet()}
           />
-        </div>
-      </div>
-    </div>
+        }
+      />
+    </>
   );
 }
