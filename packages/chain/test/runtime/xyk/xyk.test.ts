@@ -471,6 +471,9 @@ describe("xyk", () => {
         alice
       );
 
+      expect(balanceA?.toString()).toEqual("999900");
+      expect(balanceB?.toString()).toEqual("1000099");
+
       Provable.log("balances", {
         balanceA,
         balanceB,

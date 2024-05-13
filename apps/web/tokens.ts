@@ -55,3 +55,8 @@ export const tokens: Record<
     logo: "/tokens/lp.svg",
   },
 };
+
+export const pools: [string, string][] = [
+  ["0", "1"],
+  ["1", "2"],
+];

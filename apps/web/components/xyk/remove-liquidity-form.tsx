@@ -5,25 +5,25 @@ import { Card } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { ArrowDown } from "lucide-react";
 
-export interface AddLiquidityFormProps {
+export interface RemoveLiquidityFormProps {
   loading: boolean;
   poolExists: boolean;
   onChangeTokens: () => void;
 }
 
-export function AddLiquidityForm({
+export function RemoveLiquidityForm({
   loading,
   poolExists,
   onChangeTokens,
-}: AddLiquidityFormProps) {
+}: RemoveLiquidityFormProps) {
   const form = useFormContext();
   const error = Object.values(form.formState.errors)[0]?.message?.toString();
 
   return (
     <>
-      <div className="relative grid gap-2">
+      <div className="relative">
         <div className="relative grid gap-2">
-          <TokenInput label="Token A" name="tokenA" />
+          <TokenInput label="Token A" name="tokenA" amountInputDisabled />
 
           <div className="absolute left-1/2 top-1/2 -ml-6 -mt-5">
             <Button
@@ -39,7 +39,7 @@ export function AddLiquidityForm({
           <TokenInput
             label="Token B"
             name="tokenB"
-            amountInputDisabled={poolExists}
+            amountInputDisabled={true}
           />
         </div>
         <div>
@@ -47,8 +47,8 @@ export function AddLiquidityForm({
             label="LP Token"
             name="tokenLP"
             tokenInputDisabled
-            amountInputDisabled
             tokenInputHidden={true}
+            className="mt-2"
           />
         </div>
       </div>
@@ -58,7 +58,7 @@ export function AddLiquidityForm({
         disabled={!form.formState.isValid}
         className="mt-4 h-12 w-full rounded-lg px-10 text-lg"
       >
-        {error ?? (poolExists ? "Add liquidity" : "Create pool")}
+        Remove liquidity
       </Button>
     </>
   );

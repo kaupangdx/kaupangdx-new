@@ -14,6 +14,7 @@ export interface TokenInputProps {
   tokenInputDisabled?: boolean;
   amountInputDisabled?: boolean;
   tokenInputHidden?: boolean;
+  className?: string;
 }
 
 export function TokenInput({
@@ -22,11 +23,12 @@ export function TokenInput({
   tokenInputDisabled,
   amountInputDisabled,
   tokenInputHidden,
+  className,
 }: TokenInputProps) {
   const form = useFormContext();
 
   return (
-    <Card className="rounded-2xl   px-4 py-4 pb-4">
+    <Card className={cn(["rounded-2xl   px-4 py-4 pb-4", className])}>
       <div className="flex justify-between">
         <p className="text-sm text-muted-foreground">{label}</p>
       </div>

@@ -32,7 +32,11 @@ export const placeholderPoolValue = Bool(true);
 export const MAX_PATH_LENGTH = 3;
 export class TokenIdPath extends Struct({
   path: Provable.Array(TokenId, MAX_PATH_LENGTH),
-}) {}
+}) {
+  public static from(path: TokenId[]) {
+    return new TokenIdPath({ path });
+  }
+}
 
 export interface XYKConfig {
   feeDivider: bigint;
@@ -208,6 +212,13 @@ export class XYK extends RuntimeModule<XYKConfig> {
       tokenAAmountLimit.greaterThanOrEqual(tokenAAmount);
     const isTokenBAmountLimitSufficient =
       tokenBLAmountLimit.greaterThanOrEqual(tokenBAmount);
+
+    Provable.log("limits", {
+      tokenAAmount,
+      tokenBAmount,
+      tokenAAmountLimit,
+      tokenBLAmountLimit,
+    });
 
     assert(poolDoesExists, errors.poolDoesNotExist());
     assert(lpTokenTotalSupplyIsZero.not(), errors.lpTokenSupplyIsZero());

@@ -1,5 +1,4 @@
 "use client";
-import { SwapForm } from "@/components/xyk/swap-form";
 
 import { Home as HomeComponent } from "@/components/home";
 import { Balances, Wallet } from "@/components/wallet/wallet";
@@ -15,6 +14,9 @@ import { tokens } from "@/tokens";
 import { useClientStore } from "@/lib/stores/client";
 import { FaucetForm } from "@/components/faucet/faucet-form";
 import { AddLiquidityForm } from "./xyk/add-liquidity-form";
+import { RemoveLiquidityForm } from "./xyk/remove-liquidity-form";
+import { SwapForm } from "./xyk/swap-form";
+import { TransferForm } from "./wallet/transfer-form";
 
 export default function Home() {
   const { connectWallet, wallet, observeWalletChange, initializeWallet } =
@@ -54,10 +56,10 @@ export default function Home() {
   return (
     <>
       <HomeComponent
-        // swapForm={<SwapForm />}
-        swapForm={<>swap</>}
-        faucetForm={<FaucetForm />}
+        swapForm={<SwapForm />}
+        transferForm={<TransferForm />}
         addLiquidityForm={<AddLiquidityForm />}
+        removeLiquidityForm={<RemoveLiquidityForm />}
         wallet={
           <Wallet
             loading={loading}

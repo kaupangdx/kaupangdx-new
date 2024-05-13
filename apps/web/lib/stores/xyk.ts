@@ -3,11 +3,11 @@ import { immer } from "zustand/middleware/immer";
 import { Client, useClientStore } from "./client";
 import { useCallback, useEffect, useMemo } from "react";
 import { useWalletStore } from "./wallet";
-import { Bool, PublicKey } from "o1js";
+import { Bool, Provable, PublicKey } from "o1js";
 import { Balance, TokenId } from "@proto-kit/library";
 import { isPendingTransaction } from "./balances";
 import { PendingTransaction } from "@proto-kit/sequencer";
-import { PoolKey } from "chain";
+import { PoolKey, TokenIdPath } from "chain";
 import { resolve } from "path";
 import { useChainStore } from "./chain";
 
@@ -27,6 +27,22 @@ export interface XYKState {
     tokenBId: string,
     tokenAAmount: string,
     tokenBAmountLimit: string,
+  ) => Promise<PendingTransaction>;
+  removeLiquidity: (
+    client: Client,
+    sender: string,
+    tokenAId: string,
+    tokenBId: string,
+    lpTokenAmount: string,
+    tokenAAmountLimit: string,
+    tokenBAmountLimit: string,
+  ) => Promise<PendingTransaction>;
+  sellPath: (
+    client: Client,
+    sender: string,
+    path: string[],
+    amountIn: string,
+    amountOutMinLimit: string,
   ) => Promise<PendingTransaction>;
   loadPool: (client: Client, key: string) => Promise<void>;
   pools: {
@@ -117,6 +133,64 @@ export const useXYKStore = create<XYKState, [["zustand/immer", never]]>(
       isPendingTransaction(tx.transaction);
       return tx.transaction;
     },
+    removeLiquidity: async (
+      client: Client,
+      sender: string,
+      tokenAId: string,
+      tokenBId: string,
+      lpTokenAmount: string,
+      tokenAAmountLimit: string,
+      tokenBAmountLimit: string,
+    ) => {
+      const xyk = client.runtime.resolve("XYK");
+      const senderPublicKey = PublicKey.fromBase58(sender);
+
+      const tx = await client.transaction(senderPublicKey, () => {
+        xyk.removeLiquiditySigned(
+          TokenId.from(tokenAId),
+          TokenId.from(tokenBId),
+          Balance.from(lpTokenAmount),
+          Balance.from(tokenAAmountLimit),
+          Balance.from(tokenBAmountLimit),
+        );
+      });
+
+      await tx.sign();
+      await tx.send();
+
+      isPendingTransaction(tx.transaction);
+      return tx.transaction;
+    },
+    sellPath: async (
+      client: Client,
+      sender: string,
+      path: string[],
+      amountIn: string,
+      amountOutMinLimit: string,
+    ) => {
+      const xyk = client.runtime.resolve("XYK");
+      const senderPublicKey = PublicKey.fromBase58(sender);
+
+      const basePath = path.length === 3 ? path : [...path, "99999"];
+      const tokenIdPath = TokenIdPath.from(
+        basePath.map((id) => TokenId.from(id)),
+      );
+      Provable.log("PATH", basePath, tokenIdPath);
+
+      const tx = await client.transaction(senderPublicKey, () => {
+        xyk.sellPathSigned(
+          tokenIdPath,
+          Balance.from(amountIn),
+          Balance.from(amountOutMinLimit),
+        );
+      });
+
+      await tx.sign();
+      await tx.send();
+
+      isPendingTransaction(tx.transaction);
+      return tx.transaction;
+    },
   })),
 );
 
@@ -168,6 +242,58 @@ export const useAddLiquidity = () => {
         tokenBId,
         tokenAAmount,
         tokenBAmountLimit,
+      );
+
+      wallet.addPendingTransaction(pendingTransaction);
+    },
+    [client.client, wallet.wallet],
+  );
+};
+
+export const useRemoveLiquidity = () => {
+  const client = useClientStore();
+  const wallet = useWalletStore();
+  const { removeLiquidity } = useXYKStore();
+
+  return useCallback(
+    async (
+      tokenAId: string,
+      tokenBId: string,
+      lpTokenAmount: string,
+      tokenAAmountLimit: string,
+      tokenBAmountLimit: string,
+    ) => {
+      if (!client.client || !wallet.wallet) return;
+      const pendingTransaction = await removeLiquidity(
+        client.client,
+        wallet.wallet,
+        tokenAId,
+        tokenBId,
+        lpTokenAmount,
+        tokenAAmountLimit,
+        tokenBAmountLimit,
+      );
+
+      wallet.addPendingTransaction(pendingTransaction);
+    },
+    [client.client, wallet.wallet],
+  );
+};
+
+export const useSellPath = () => {
+  const client = useClientStore();
+  const wallet = useWalletStore();
+  const { sellPath } = useXYKStore();
+
+  return useCallback(
+    async (path: string[], amountIn: string, amountOutMinLimit: string) => {
+      if (!client.client || !wallet.wallet) return;
+      const pendingTransaction = await sellPath(
+        client.client,
+        wallet.wallet,
+        path,
+        amountIn,
+        amountOutMinLimit,
       );
 
       wallet.addPendingTransaction(pendingTransaction);

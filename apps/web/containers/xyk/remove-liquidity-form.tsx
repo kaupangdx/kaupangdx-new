@@ -1,5 +1,5 @@
 import { Form } from "@/components/ui/form";
-import { AddLiquidityForm as AddLiquidityFormComponent } from "@/components/xyk/add-liquidity-form";
+import { RemoveLiquidityForm as RemoveLiquidityFormComponent } from "@/components/xyk/remove-liquidity-form";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import {
   useCreatePool,
   useObservePool,
   usePool,
+  useRemoveLiquidity,
 } from "@/lib/stores/xyk";
 import BigNumber from "bignumber.js";
 import { LPTokenId, PoolKey, TokenPair } from "chain";
@@ -24,21 +25,19 @@ import { usePoolKey } from "@/lib/xyk/usePoolKey";
 import { useSpotPrice } from "@/lib/xyk/useSpotPrice";
 
 export function addPrecision(value: string) {
-  return new BigNumber(value).times(10 ** precision).toFixed(0);
+  return new BigNumber(value).times(10 ** precision).toString();
 }
 
 export function removePrecision(value: string) {
-  return new BigNumber(value).div(10 ** precision).toFixed(2);
+  return new BigNumber(value).div(10 ** precision).toString();
 }
 
-export function AddLiquidityForm() {
+export function RemoveLiquidityForm() {
   const [loading, setLoading] = useState(false);
-  const createPool = useCreatePool();
-  const addLiquidity = useAddLiquidity();
+  const removeLiquidity = useRemoveLiquidity();
   const { wallet } = useWalletStore();
 
-  const balanceARef = useRef("0");
-  const balanceBRef = useRef("0");
+  const balanceLPRef = useRef("0");
 
   const formSchema = z
     .object({
@@ -49,7 +48,9 @@ export function AddLiquidityForm() {
         })
         .min(1, { message: "Token A is required" }),
       tokenA_amount: z
-        .string()
+        .string({
+          required_error: "Token A amount is required",
+        })
         .min(1, { message: "Token A amount is required" }),
       tokenB_token: z
         .string({
@@ -58,7 +59,9 @@ export function AddLiquidityForm() {
         })
         .min(1, { message: "Token B is required" }),
       tokenB_amount: z
-        .string()
+        .string({
+          required_error: "Token B amount is required",
+        })
         .min(1, { message: "Token B amount is required" }),
       tokenLP_amount: z.any(),
     })
@@ -66,25 +69,15 @@ export function AddLiquidityForm() {
       message: "Tokens must be different",
       path: ["tokenA_token"],
     })
-    .refine(
-      (data) => {
-        return new BigNumber(data.tokenA_amount).lte(
-          removePrecision(balanceARef.current),
-        );
-      },
-      {
-        message: "Insufficient balance",
-        path: ["tokenA_amount"],
-      },
-    )
+
     .refine(
       (data) =>
-        new BigNumber(data.tokenB_amount).lte(
-          removePrecision(balanceBRef.current),
+        new BigNumber(data.tokenLP_amount).lte(
+          removePrecision(balanceLPRef.current),
         ),
       {
         message: "Insufficient balance",
-        path: ["tokenB_amount"],
+        path: ["tokenLP_amount"],
       },
     );
 
@@ -104,15 +97,20 @@ export function AddLiquidityForm() {
   // observe balances of the pool & the connected wallet
   const tokenAReserve = useObserveBalance(fields.tokenA_token, poolKey);
   const tokenBReserve = useObserveBalance(fields.tokenB_token, poolKey);
-  const userTokenABalance = useObserveBalance(fields.tokenA_token, wallet);
-  const userTokenBBalance = useObserveBalance(fields.tokenB_token, wallet);
+  const userTokenLpBalance = useObserveBalance(
+    LPTokenId.fromTokenPair(tokenPair).toString(),
+    wallet,
+  );
 
   useEffect(() => {
-    if (!userTokenABalance || !userTokenBBalance) return;
-    balanceARef.current = userTokenABalance;
-    balanceBRef.current = userTokenBBalance;
+    if (!userTokenLpBalance) return;
+    balanceLPRef.current = userTokenLpBalance;
     form.formState.isDirty && form.trigger();
-  }, [userTokenABalance, userTokenBBalance, form.formState.isDirty]);
+  }, [userTokenLpBalance, form.formState.isDirty]);
+
+  useEffect(() => {
+    form.formState.isDirty && form.trigger();
+  }, [fields.tokenLP_amount, form.formState.isDirty]);
 
   const lpTotalSupply = useObserveTotalSupply(
     LPTokenId.fromTokenPair(tokenPair).toString(),
@@ -120,55 +118,60 @@ export function AddLiquidityForm() {
 
   const spotPrice = useSpotPrice(tokenAReserve, tokenBReserve);
 
+  // calculate amount A & amount B
   useEffect(() => {
-    if (
-      !pool?.exists ||
-      !lpTotalSupply ||
-      !fields.tokenA_amount ||
-      !tokenAReserve
-    ) {
-      return;
-    }
+    if (!lpTotalSupply || !tokenAReserve || !tokenBReserve) return;
 
-    const lpTokensToMint = new BigNumber(lpTotalSupply)
-      .multipliedBy(addPrecision(fields.tokenA_amount))
-      .div(tokenAReserve)
-      .toString();
-
-    console.log("calculated lp tokens", removePrecision(lpTokensToMint));
-    form.setValue("tokenLP_amount", removePrecision(lpTokensToMint));
-  }, [pool, tokenAReserve, fields.tokenA_token, lpTotalSupply]);
-
-  // calculate amount B
-  useEffect(() => {
-    const tokenB_amount = new BigNumber(fields.tokenA_amount).dividedBy(
-      spotPrice,
+    const supplyFraction = new BigNumber(lpTotalSupply).dividedBy(
+      fields.tokenLP_amount,
+    );
+    const tokenA_amount = new BigNumber(tokenAReserve).dividedBy(
+      supplyFraction,
+    );
+    const tokenB_amount = new BigNumber(tokenBReserve).dividedBy(
+      supplyFraction,
     );
 
-    if (!pool?.loading && pool?.exists && !tokenB_amount.isNaN()) {
+    if (
+      !pool?.loading &&
+      pool?.exists &&
+      !tokenB_amount.isNaN() &&
+      !tokenA_amount.isNaN()
+    ) {
+      form.setValue(
+        "tokenA_amount",
+        removeTrailingZeroes(tokenA_amount.toFixed(precision)),
+      );
       form.setValue(
         "tokenB_amount",
         removeTrailingZeroes(tokenB_amount.toFixed(precision)),
       );
     }
-  }, [fields.tokenA_amount, pool, lpTotalSupply, spotPrice]);
+  }, [
+    fields.tokenLP_amount,
+    pool,
+    lpTotalSupply,
+    spotPrice,
+    tokenAReserve,
+    tokenBReserve,
+  ]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     try {
       if (pool?.exists) {
-        await addLiquidity(
+        await removeLiquidity(
           values.tokenA_token,
           values.tokenB_token,
-          addPrecision(values.tokenA_amount),
-          addPrecision(values.tokenB_amount),
-        );
-      } else {
-        await createPool(
-          values.tokenA_token,
-          values.tokenB_token,
-          addPrecision(values.tokenA_amount),
-          addPrecision(values.tokenB_amount),
+          addPrecision(values.tokenLP_amount),
+          // TODO: actually add a limit here based on allowed slippage
+
+          new BigNumber(values.tokenA_token).lt(values.tokenB_token)
+            ? addPrecision(values.tokenB_amount)
+            : addPrecision(values.tokenA_amount),
+          new BigNumber(values.tokenA_token).lt(values.tokenB_token)
+            ? addPrecision(values.tokenA_amount)
+            : addPrecision(values.tokenB_amount),
         );
       }
     } finally {
@@ -181,27 +184,26 @@ export function AddLiquidityForm() {
   };
 
   // if create pool, calculate the initial LP amount
-  useEffect(() => {
-    form.formState.isDirty && form.trigger();
+  // useEffect(() => {
+  //   form.trigger();
 
-    if (pool?.exists) {
-      return;
-    }
+  //   if (pool?.exists) {
+  //     return;
+  //   }
 
-    if (!fields.tokenA_token || !fields.tokenB_token) return;
-    if (fields.tokenA_token > fields.tokenB_token) {
-      form.setValue("tokenLP_amount", fields.tokenA_amount);
-    } else {
-      form.setValue("tokenLP_amount", fields.tokenB_amount);
-    }
-  }, [
-    fields.tokenA_amount,
-    fields.tokenB_amount,
-    fields.tokenA_token,
-    fields.tokenB_token,
-    pool,
-    form.formState.isDirty,
-  ]);
+  //   if (!fields.tokenA_token || !fields.tokenB_token) return;
+  //   if (fields.tokenA_token > fields.tokenB_token) {
+  //     form.setValue("tokenLP_amount", fields.tokenA_amount);
+  //   } else {
+  //     form.setValue("tokenLP_amount", fields.tokenB_amount);
+  //   }
+  // }, [
+  //   fields.tokenA_amount,
+  //   fields.tokenB_amount,
+  //   fields.tokenA_token,
+  //   fields.tokenB_token,
+  //   pool,
+  // ]);
 
   const changeTokens = useCallback(() => {
     form.reset();
@@ -214,7 +216,7 @@ export function AddLiquidityForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <AddLiquidityFormComponent
+        <RemoveLiquidityFormComponent
           onChangeTokens={changeTokens}
           poolExists={pool?.exists ?? true}
           loading={loading}

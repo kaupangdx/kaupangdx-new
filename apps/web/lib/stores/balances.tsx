@@ -30,6 +30,13 @@ export interface BalancesState {
   clearBalances: (address?: string) => void;
   faucet: (client: Client, address: string) => Promise<PendingTransaction>;
   loadTotalSupply: (client: Client, tokenId: string) => Promise<void>;
+  transfer: (
+    client: Client,
+    sender: string,
+    tokenId: string,
+    address: string,
+    amount: string,
+  ) => Promise<PendingTransaction>;
 }
 
 export function isPendingTransaction(
@@ -112,6 +119,31 @@ export const useBalancesStore = create<
       isPendingTransaction(tx.transaction);
       return tx.transaction;
     },
+    async transfer(
+      client: Client,
+      address: string,
+      tokenId: string,
+      recipient: string,
+      amount: string,
+    ) {
+      const balances = client.runtime.resolve("Balances");
+      const sender = PublicKey.fromBase58(address);
+
+      const tx = await client.transaction(sender, () => {
+        balances.transferSigned(
+          TokenId.from(tokenId),
+          sender,
+          PublicKey.fromBase58(recipient),
+          Balance.from(amount),
+        );
+      });
+
+      await tx.sign();
+      await tx.send();
+
+      isPendingTransaction(tx.transaction);
+      return tx.transaction;
+    },
   })),
 );
 
@@ -155,6 +187,29 @@ export const useFaucet = () => {
 
     wallet.addPendingTransaction(pendingTransaction);
   }, [client.client, wallet.wallet]);
+};
+
+export const useTransfer = () => {
+  const client = useClientStore();
+  const balances = useBalancesStore();
+  const wallet = useWalletStore();
+
+  return useCallback(
+    async (tokenId: string, recipient: string, amount: string) => {
+      if (!client.client || !wallet.wallet) return;
+
+      const pendingTransaction = await balances.transfer(
+        client.client,
+        wallet.wallet,
+        tokenId,
+        recipient,
+        amount,
+      );
+
+      wallet.addPendingTransaction(pendingTransaction);
+    },
+    [client.client, wallet.wallet],
+  );
 };
 
 export const useTotalSupply = (tokenId?: string) => {

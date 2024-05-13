@@ -27,16 +27,18 @@ import { Toaster } from "@/components/ui/toaster";
 
 export interface HomeProps {
   swapForm: JSX.Element;
-  faucetForm: JSX.Element;
   wallet: JSX.Element;
   addLiquidityForm: JSX.Element;
+  removeLiquidityForm: JSX.Element;
+  transferForm: JSX.Element;
 }
 
 export function Home({
   swapForm,
   wallet,
-  faucetForm,
   addLiquidityForm,
+  removeLiquidityForm,
+  transferForm,
 }: HomeProps) {
   const [tab, setTab] = useState("swap");
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
@@ -49,7 +51,7 @@ export function Home({
         <div className="flex justify-center">
           <div className=" mt-24  max-w-md basis-11/12 justify-center md:basis-4/12">
             <Tabs activationMode="manual" value={tab}>
-              <div className="mb-3 flex justify-between">
+              <div className="mb-4 flex justify-between">
                 <TabsList className="border border-muted bg-transparent">
                   <TabsTrigger
                     onClick={() => setTab("swap")}
@@ -131,11 +133,11 @@ export function Home({
               <TabsContent value="swap">{swapForm}</TabsContent>
 
               <TabsContent value="pools-add">{addLiquidityForm}</TabsContent>
-              <TabsContent value="pools-remove">pools remove</TabsContent>
+              <TabsContent value="pools-remove">
+                {removeLiquidityForm}
+              </TabsContent>
 
-              <TabsContent value="transfer"></TabsContent>
-
-              <TabsContent value="faucet">{faucetForm}</TabsContent>
+              <TabsContent value="transfer">{transferForm}</TabsContent>
             </Tabs>
           </div>
         </div>
