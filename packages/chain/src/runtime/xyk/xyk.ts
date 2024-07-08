@@ -66,6 +66,27 @@ export class XYK extends RuntimeModule<XYKConfig> {
     return this.pools.get(poolKey).isSome;
   }
 
+  public calculateSpotPrice(tokenAId: TokenId, tokenBId: TokenId) {
+    const tokenPair = TokenPair.from(tokenAId, tokenBId);
+    const poolKey = PoolKey.fromTokenPair(tokenPair);
+
+    const reserveA = this.balances.getBalance(tokenAId, poolKey);
+    // TODO: should be padded with 1 to avoid division by zero
+    const reserveB = this.balances.getBalance(tokenBId, poolKey);
+    const paddedReserveB = UInt64.from(
+      Provable.if(reserveB.equals(0), Balance, Balance.from(1), reserveB).value
+    );
+
+    return Balance.from(
+      Provable.if(
+        reserveB.equals(0),
+        Balance,
+        Balance.from(0),
+        reserveA.div(paddedReserveB)
+      ).value
+    );
+  }
+
   /**
    * Creates an XYK pool if one doesnt exist yet, and if the creator has
    * sufficient balance to do so.

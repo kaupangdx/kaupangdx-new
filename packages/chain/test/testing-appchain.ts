@@ -17,6 +17,8 @@ import {
 import { PrivateKey } from "o1js";
 
 import { GovernanceLifecycleTransactionHook } from "../src/protocol/governance-lifecycle";
+import { MultiTokenTransactionFeeHook } from "../src/protocol/multi-token-transaction-fee-hook";
+import { TransactionFeeHook } from "@proto-kit/library/dist/hooks/TransactionFeeHook";
 
 export function fromRuntime<
   RuntimeModules extends RuntimeModulesRecord &
@@ -29,6 +31,7 @@ export function fromRuntime<
     Protocol: Protocol.from({
       modules: VanillaProtocolModules.with({
         GovernanceLifecycle: GovernanceLifecycleTransactionHook,
+        TransactionFee: MultiTokenTransactionFeeHook,
       }),
     }),
     Sequencer: Sequencer.from({

@@ -1,4 +1,4 @@
-import { Balance, VanillaRuntimeModules } from "@proto-kit/library";
+import { Balance, TokenId, VanillaRuntimeModules } from "@proto-kit/library";
 import { Faucet } from "./faucet";
 import { ModulesConfig } from "@proto-kit/common";
 import { Locks } from "./locks";
@@ -7,6 +7,7 @@ import { SetDelegateProposal } from "./governance/set-delegate-proposal";
 import { OutgoingMessages } from "./outgoing-messages";
 import { TokenRegistry } from "./token-registry";
 import { XYK } from "./xyk/xyk";
+import { MultiTokenTransactionFee } from "./multi-token-transaction-fee";
 
 export const modules = {
   Faucet,
@@ -16,6 +17,7 @@ export const modules = {
   OutgoingMessages,
   TokenRegistry,
   XYK,
+  MultiTokenTransactionFee,
 };
 
 export const config: ModulesConfig<
@@ -23,6 +25,9 @@ export const config: ModulesConfig<
 > = {
   Balances: {
     totalSupply: Balance.from(1_000_000_000),
+  },
+  MultiTokenTransactionFee: {
+    allowedTokens: [TokenId.from(0), TokenId.from(1)],
   },
   Faucet: {},
   Locks: {},
