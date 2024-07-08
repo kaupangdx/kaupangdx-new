@@ -7,10 +7,12 @@ import { SetDelegateProposal } from "./governance/set-delegate-proposal";
 import { OutgoingMessages } from "./outgoing-messages";
 import { TokenRegistry } from "./token-registry";
 import { XYK } from "./xyk/xyk";
+import { VolumeOracle } from "./xyk/VolumeOracle";
 
 export const modules = {
   Faucet,
   Locks,
+  VolumeOracle,
   Balances: Balances,
   SetDelegateProposal,
   OutgoingMessages,
@@ -36,8 +38,11 @@ export const config: ModulesConfig<
   TokenRegistry: {},
   XYK: {
     feeDivider: 1000n,
-    fee: 3n, //
+    fee: 3n, // 0.3%
+    // volumeFee: 0n,
+    volumeFee: 500n, // 500% at max volatility
   },
+  VolumeOracle: {}
 };
 
 export default {
