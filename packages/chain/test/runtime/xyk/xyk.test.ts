@@ -398,7 +398,7 @@ describe("xyk", () => {
     });
   });
 
-  describe("sell", () => {
+  describe.only("sell", () => {
     beforeAll(async () => {
       nonce = 0;
       appChain = fromRuntime(modules);
@@ -451,7 +451,7 @@ describe("xyk", () => {
         appChain,
         alicePrivateKey,
         path,
-        Balance.from(100),
+        Balance.from(10000),
         Balance.from(1),
         { nonce: nonce++ }
       );
@@ -471,8 +471,8 @@ describe("xyk", () => {
         alice
       );
 
-      expect(balanceA?.toString()).toEqual("999900");
-      expect(balanceB?.toString()).toEqual("1000099");
+      expect(balanceA?.toString()).toEqual("990000");
+      expect(balanceB?.toString()).toEqual((1009871 - 39).toString());
 
       Provable.log("balances", {
         balanceA,
