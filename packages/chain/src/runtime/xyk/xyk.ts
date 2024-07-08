@@ -24,6 +24,7 @@ export const errors = {
   reserveAIsZero: () => `Reserve A must be greater than zero`,
   lpTokenSupplyIsZero: () => `LP token supply is zero`,
   amountOutIsInsufficient: () => `Amount out is insufficient`,
+  poolLbpAlreadyExists: () => `A lbp pool with same tokens already exists`,
 };
 
 // we need a placeholder pool value until protokit supports value-less dictonaries or state arrays
@@ -108,7 +109,60 @@ export class XYK extends RuntimeModule<XYKConfig> {
       ).value
     );
 
-    this.tokenRegistry.addTokenId(lpTokenId);
+    const success = this.tokenRegistry.addTokenPair(tokenAId, tokenBId, Bool(true), Bool(true));
+    assert(success, errors.poolLbpAlreadyExists());
+
+    this.balances.mintAndIncrementSupply(
+      lpTokenId,
+      creator,
+      initialLPTokenSupply
+    );
+    this.pools.set(poolKey, placeholderPoolValue);
+  }
+
+  /**
+   * Creates an XYK pool from a closed LBP pool
+   *
+   * @param creator
+   * @param tokenAId
+   * @param tokenBId
+   * @param tokenASupply
+   * @param tokenBSupply
+   */
+  public migrateLbpPool(
+    creator: PublicKey,
+    poolKeyLbp: PublicKey,
+    tokenAId: TokenId,
+    tokenBId: TokenId,
+    tokenAAmount: Balance,
+    tokenBAmount: Balance
+  ) {
+    const tokenPair = TokenPair.from(tokenAId, tokenBId);
+    const poolKey = PoolKey.fromTokenPair(tokenPair);
+    const areTokensDistinct = tokenAId.equals(tokenBId).not();
+    const poolDoesNotExist = this.poolExists(poolKey).not();
+
+    // TODO: add check for minimal liquidity in pools
+    assert(areTokensDistinct, errors.tokensNotDistinct());
+    assert(poolDoesNotExist, errors.poolAlreadyExists());
+
+    // transfer liquidity from the lbp pool to the xyk pool
+    this.balances.transfer(tokenAId, poolKeyLbp, poolKey, tokenAAmount);
+    this.balances.transfer(tokenBId, poolKeyLbp, poolKey, tokenBAmount);
+
+    // determine initial LP token supply
+    const lpTokenId = LPTokenId.fromTokenPair(tokenPair);
+    const initialLPTokenSupply = Balance.from(
+      // if tokenA supply is greater than tokenB supply, use tokenA supply, otherwise use tokenB supply
+      Provable.if(
+        tokenAId.greaterThan(tokenBId),
+        Balance,
+        tokenAAmount,
+        tokenBAmount
+      ).value
+    );
+
+    this.tokenRegistry.addTokenPair(tokenAId, tokenBId, Bool(true), Bool(false));
     this.balances.mintAndIncrementSupply(
       lpTokenId,
       creator,

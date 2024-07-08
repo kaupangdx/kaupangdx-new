@@ -5,7 +5,8 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "testlbp": "pnpm run test --filter=chain -- lbp"
   },
   "devDependencies": {
     "eslint": "^8.53.0",

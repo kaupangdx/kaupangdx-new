@@ -7,6 +7,7 @@ import { SetDelegateProposal } from "./governance/set-delegate-proposal";
 import { OutgoingMessages } from "./outgoing-messages";
 import { TokenRegistry } from "./token-registry";
 import { XYK } from "./xyk/xyk";
+import { LBP } from "./lbp/lbp";
 
 export const modules = {
   Faucet,
@@ -16,6 +17,7 @@ export const modules = {
   OutgoingMessages,
   TokenRegistry,
   XYK,
+  LBP
 };
 
 export const config: ModulesConfig<
@@ -38,6 +40,7 @@ export const config: ModulesConfig<
     feeDivider: 1000n,
     fee: 3n, //
   },
+  LBP: {},
 };
 
 export default {
