@@ -1,29 +1,26 @@
-import { PrivateKey } from "o1js";
+import { PrivateKey, Provable } from "o1js";
 import { Balance, BalancesKey, TokenId } from "@proto-kit/library";
 import { config, modules } from "../../src/runtime";
-import { fromRuntime } from "../testing-appchain";
+import {
+  feeTokenId as originalFeeTokenId,
+  fromRuntime,
+} from "../testing-appchain";
 import { drip, KaupangTestingAppChain } from "../helpers";
+import { Balances } from "../../src/runtime/balances";
+import { MultiTokenTransactionFee } from "../../src/runtime/multi-token-transaction-fee";
 
 describe("multi token transaction fee", () => {
   const alicePrivateKey = PrivateKey.random();
   const alice = alicePrivateKey.toPublicKey();
-  const tokenAId = TokenId.from(0);
-  const tokenBId = TokenId.from(1);
-  const tokenAInitialLiquidity = Balance.from(1_000_000);
-  const tokenBInitialLiquidity = Balance.from(2_000_000);
+  const bobPrivateKey = PrivateKey.random();
+  const bob = bobPrivateKey.toPublicKey();
+  const newFeeTokenId = TokenId.from(1);
+  const newFeeTokenAmount = Balance.from(1_000_000_000);
+  const originalFeeTokenAmount = Balance.from(1_000_000_000);
   let appChain: ReturnType<typeof fromRuntime<typeof modules>>;
+  let balances: Balances;
+  let multiTransactionFee: MultiTokenTransactionFee;
   let nonce = 0;
-
-  beforeAll(async () => {
-    appChain = fromRuntime(modules);
-
-    appChain.configurePartial({
-      Runtime: config,
-    });
-
-    await appChain.start();
-    appChain.setSigner(alicePrivateKey);
-  });
 
   async function createPoolSigned(
     appChain: KaupangTestingAppChain,
@@ -51,22 +48,88 @@ describe("multi token transaction fee", () => {
     return tx;
   }
 
-  it("should drip tokens", async () => {
-    await drip(appChain, alicePrivateKey, tokenAId, tokenAInitialLiquidity, {
-      nonce: nonce++,
+  beforeAll(async () => {
+    appChain = fromRuntime(modules);
+
+    appChain.configurePartial({
+      Runtime: config,
     });
-    await drip(appChain, alicePrivateKey, tokenBId, tokenBInitialLiquidity, {
-      nonce: nonce++,
-    });
+
+    await appChain.start();
+    appChain.setSigner(alicePrivateKey);
+    balances = appChain.runtime.resolve("Balances");
+    multiTransactionFee = appChain.runtime.resolve("MultiTokenTransactionFee");
+  });
+
+  it("should transfer tokens", async () => {
+    await drip(appChain, alicePrivateKey, newFeeTokenId, newFeeTokenAmount);
+    await appChain.produceBlock();
+    await drip(
+      appChain,
+      alicePrivateKey,
+      originalFeeTokenId,
+      originalFeeTokenAmount
+    );
+    await appChain.produceBlock();
 
     await createPoolSigned(
       appChain,
       alicePrivateKey,
-      tokenAId,
-      tokenBId,
-      tokenAInitialLiquidity,
-      tokenBInitialLiquidity,
-      { nonce: nonce++ }
+      newFeeTokenId,
+      originalFeeTokenId,
+      newFeeTokenAmount.div(2),
+      originalFeeTokenAmount.div(2)
     );
+
+    const block = await appChain.produceBlock();
+    Provable.log(block?.transactions);
+
+    const balanceOriginalFee =
+      await appChain.query.runtime.Balances.balances.get(
+        new BalancesKey({ tokenId: newFeeTokenId, address: alice })
+      );
+    const balanceFee = await appChain.query.runtime.Balances.balances.get(
+      new BalancesKey({ tokenId: originalFeeTokenId, address: alice })
+    );
+
+    Provable.log({
+      balanceOriginalFee,
+      balanceFee,
+    });
+
+    const tx1 = await appChain.transaction(alice, () => {
+      multiTransactionFee.setFeeTokenSigned(newFeeTokenId);
+    });
+
+    await tx1.sign();
+    await tx1.send();
+
+    await appChain.produceBlock();
+
+    const transferAmount = Balance.from(500);
+    const tx2 = await appChain.transaction(alice, () => {
+      balances.transferSigned(originalFeeTokenId, alice, bob, transferAmount);
+    });
+
+    await tx2.sign();
+    await tx2.send();
+
+    const block2 = await appChain.produceBlock();
+
+    Provable.log("transferAmount", transferAmount);
+    Provable.log(block2?.transactions);
+
+    const balanceOriginalFee2 =
+      await appChain.query.runtime.Balances.balances.get(
+        new BalancesKey({ tokenId: originalFeeTokenId, address: alice })
+      );
+    const balanceFee2 = await appChain.query.runtime.Balances.balances.get(
+      new BalancesKey({ tokenId: newFeeTokenId, address: alice })
+    );
+
+    Provable.log({
+      balanceOriginalFee2,
+      balanceFee2,
+    });
   });
 });

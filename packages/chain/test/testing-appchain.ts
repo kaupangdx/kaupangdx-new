@@ -1,5 +1,6 @@
 import {
   InMemorySequencerModules,
+  TokenId,
   VanillaProtocolModules,
   VanillaRuntimeModules,
 } from "@proto-kit/library";
@@ -19,6 +20,8 @@ import { PrivateKey } from "o1js";
 import { GovernanceLifecycleTransactionHook } from "../src/protocol/governance-lifecycle";
 import { MultiTokenTransactionFeeHook } from "../src/protocol/multi-token-transaction-fee-hook";
 import { TransactionFeeHook } from "@proto-kit/library/dist/hooks/TransactionFeeHook";
+
+export const feeTokenId = TokenId.from(0);
 
 export function fromRuntime<
   RuntimeModules extends RuntimeModulesRecord &
@@ -53,11 +56,21 @@ export function fromRuntime<
       BlockHeight: {},
       LastStateRoot: {},
       TransactionFee: {
-        tokenId: 0n,
+        tokenId: feeTokenId.toBigInt(),
         feeRecipient: PrivateKey.random().toPublicKey().toBase58(),
         baseFee: 0n,
         perWeightUnitFee: 0n,
-        methods: {},
+        methods: {
+          "Faucet.dripSigned": {
+            baseFee: 0n,
+            weight: 0n,
+            perWeightUnitFee: 0n,
+          },
+          "Balances.transferSigned": {
+            weight: 100n,
+            perWeightUnitFee: 1n,
+          },
+        },
       },
       GovernanceLifecycle: {
         goverancePeriodDurationInBlocks: 1n,
