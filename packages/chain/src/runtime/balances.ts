@@ -1,11 +1,21 @@
 import { runtimeModule, state, runtimeMethod } from "@proto-kit/module";
 import { State, StateMap, assert } from "@proto-kit/protocol";
-import { Balance, Balances as BaseBalances, TokenId } from "@proto-kit/library";
-import { PublicKey } from "o1js";
+import {
+  Balance,
+  BalancesKey,
+  Balances as BaseBalances,
+  TokenId,
+} from "@proto-kit/library";
+import { Field, PrivateKey, PublicKey, Struct } from "o1js";
 
 interface BalancesConfig {
   totalSupply: Balance;
 }
+
+export class Test extends Struct({
+  foo: Field,
+  bar: Field,
+}) {}
 
 @runtimeModule()
 export class Balances extends BaseBalances<BalancesConfig> {
@@ -14,7 +24,10 @@ export class Balances extends BaseBalances<BalancesConfig> {
     Balance
   );
 
+  @state() public test = StateMap.from(Test, Test);
+
   public getTotalSupply(tokenId: TokenId) {
+    const test = this.test.get(new Test({ foo: Field(1), bar: Field(0) }));
     return Balance.from(this.totalSupply.get(tokenId).value);
   }
 
