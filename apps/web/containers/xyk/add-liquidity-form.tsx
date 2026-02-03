@@ -1,20 +1,17 @@
 import { Form } from "@/components/ui/form";
 import { AddLiquidityForm as AddLiquidityFormComponent } from "@/components/xyk/add-liquidity-form";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useAddLiquidity,
   useCreatePool,
   useObservePool,
-  usePool,
 } from "@/lib/stores/xyk";
 import BigNumber from "bignumber.js";
-import { LPTokenId, PoolKey, TokenPair } from "chain";
-import { TokenId } from "@proto-kit/library";
+import { LPTokenId } from "chain";
 import {
-  useBalancesStore,
   useObserveBalance,
   useObserveTotalSupply,
 } from "@/lib/stores/balances";

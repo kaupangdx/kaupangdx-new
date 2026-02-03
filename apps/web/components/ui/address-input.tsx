@@ -1,10 +1,8 @@
 "use client";
 import { Card } from "./card";
 import { Input } from "./input";
-import { GeistMono } from "geist/font/mono";
 import { cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
-import { Balance } from "./balance";
 import { Info } from "lucide-react";
 
 export interface AddressInputProps {
@@ -37,8 +35,7 @@ export function AddressInput({
             disabled={disabled}
             placeholder={placeholder ?? "B62.."}
             className={cn([
-              "h-auto border-0  p-0 text-3xl focus-visible:ring-0 focus-visible:ring-offset-0",
-              GeistMono.className,
+              "h-auto border-0  p-0 text-3xl focus-visible:ring-0 focus-visible:ring-offset-0 font-mono",
             ])}
           />
         </div>
