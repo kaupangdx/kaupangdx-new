@@ -1,3 +1,11 @@
+import { noop } from "@proto-kit/common";
+
+describe("ex", () => {
+  it("ex", () => {
+    noop;
+  });
+})
+
 import { PrivateKey } from "o1js";
 import { fromRuntime } from "../testing-appchain";
 import { config, modules } from "../../src/runtime";
