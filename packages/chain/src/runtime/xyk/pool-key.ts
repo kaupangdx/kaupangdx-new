@@ -1,4 +1,3 @@
-import { TokenId } from "@proto-kit/library";
 import { Group, Poseidon, PublicKey } from "o1js";
 import { TokenPair } from "./token-pair";
 
@@ -13,10 +12,10 @@ export class PoolKey extends PublicKey {
   public static fromTokenPair(tokenPair: TokenPair): PoolKey {
     const {
       x,
-      y: { x0 },
+      y,
     } = Poseidon.hashToGroup(TokenPair.toFields(tokenPair));
 
-    const key = PoolKey.fromGroup(Group.fromFields([x, x0]));
+    const key = PoolKey.fromGroup(Group.fromFields([x, y]));
 
     return key;
   }
