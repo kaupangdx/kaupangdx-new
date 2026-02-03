@@ -1,7 +1,7 @@
 "use client";
 
 import { Home as HomeComponent } from "@/components/home";
-import { Balances, Wallet } from "@/components/wallet/wallet";
+import { Wallet } from "@/components/wallet/wallet";
 import { useEffect, useMemo, useState } from "react";
 import { useNotifyTransactions, useWalletStore } from "@/lib/stores/wallet";
 import {
@@ -12,7 +12,6 @@ import {
 import { useChainStore, usePollBlockHeight } from "@/lib/stores/chain";
 import { tokens } from "@/tokens";
 import { useClientStore } from "@/lib/stores/client";
-import { FaucetForm } from "@/components/faucet/faucet-form";
 import { AddLiquidityForm } from "./xyk/add-liquidity-form";
 import { RemoveLiquidityForm } from "./xyk/remove-liquidity-form";
 import { SwapForm } from "./xyk/swap-form";
