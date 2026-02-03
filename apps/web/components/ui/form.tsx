@@ -46,7 +46,7 @@ const useFormField = () => {
 
   const fieldState = getFieldState(fieldContext.name, formState)
 
-  if (!fieldContext) {
+  if (fieldContext === undefined) {
     throw new Error("useFormField should be used within <FormField>")
   }
 
@@ -116,7 +116,7 @@ const FormControl = React.forwardRef<
           ? `${formDescriptionId}`
           : `${formDescriptionId} ${formMessageId}`
       }
-      aria-invalid={!!error}
+      aria-invalid={Boolean(error)}
       {...props}
     />
   )

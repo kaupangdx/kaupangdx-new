@@ -94,7 +94,7 @@ export function TokenSelector({ disabled, name }: TokenSelectorProps) {
                           shouldDirty: true,
                           shouldTouch: true,
                         });
-                        form.trigger(inputName);
+                        form.trigger(inputName).then();
                         setOpen(false);
                       }}
                       className="flex items-center justify-between"
