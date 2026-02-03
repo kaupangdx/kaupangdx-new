@@ -9,7 +9,7 @@ import {
   LockId,
   LockReason,
   Locks,
-} from "../../src/runtime/locks";
+} from "../../src/runtime/modules/locks";
 
 describe("locks", () => {
   const alicePrivateKey = PrivateKey.random();
@@ -56,8 +56,8 @@ describe("locks", () => {
     appChain.setSigner(senderPrivateKey);
     const tx = await appChain.transaction(
       senderPrivateKey.toPublicKey(),
-      () => {
-        locks.lockSigned(tokenId, amount, expiresAt);
+      async () => {
+        await locks.lockSigned(tokenId, amount, expiresAt);
       },
       options
     );
@@ -75,8 +75,8 @@ describe("locks", () => {
     appChain.setSigner(senderPrivateKey);
     const tx = await appChain.transaction(
       senderPrivateKey.toPublicKey(),
-      () => {
-        locks.unlockSigned(tokenId, lockId);
+      async () => {
+        await locks.unlockSigned(tokenId, lockId);
       },
       options
     );
@@ -108,10 +108,10 @@ describe("locks", () => {
       const { network } = await queryNetwork();
       const currentBlockHeight = network?.block.height;
 
-      if (!currentBlockHeight) throw new Error("Block height not found");
+      if (currentBlockHeight === undefined) throw new Error("Block height not found");
 
       // expires in lock block height + 1
-      const expiresAt = BlockHeight.from(currentBlockHeight).add(2);
+      const expiresAt = BlockHeight.Safe.fromField(currentBlockHeight.value).add(2);
 
       await lockSigned(tokenId, alicePrivateKey, expiresAt);
       await appChain.produceBlock();

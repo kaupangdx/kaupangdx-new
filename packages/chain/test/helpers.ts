@@ -1,7 +1,6 @@
 import { Balance, TokenId } from "@proto-kit/library";
 import { PrivateKey, PublicKey } from "o1js";
 import { modules } from "../src/runtime";
-import { TestingAppChain } from "@proto-kit/sdk";
 import { fromRuntime } from "./testing-appchain";
 
 export type KaupangTestingAppChain = ReturnType<
@@ -19,8 +18,8 @@ export async function drip(
 
   const tx = await appChain.transaction(
     senderPrivateKey.toPublicKey(),
-    () => {
-      faucet.dripSigned(tokenId, amount);
+    async () => {
+      await faucet.dripSigned(tokenId, amount);
     },
     options
   );

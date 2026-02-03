@@ -5,9 +5,10 @@ import {
 } from "@proto-kit/library";
 import { Runtime, RuntimeModulesRecord } from "@proto-kit/module";
 import { Protocol } from "@proto-kit/protocol";
-import { Sequencer } from "@proto-kit/sequencer";
+import { BridgingModule, Sequencer, VanillaTaskWorkerModules } from "@proto-kit/sequencer";
 import {
   BlockStorageNetworkStateModule,
+  InMemoryBlockExplorer,
   InMemorySigner,
   InMemoryTransactionSender,
   PartialVanillaRuntimeModulesRecord,
@@ -15,40 +16,41 @@ import {
   TestingAppChain,
 } from "@proto-kit/sdk";
 import { PrivateKey } from "o1js";
-
-import { GovernanceLifecycleTransactionHook } from "../src/protocol/governance-lifecycle";
+import { DefaultModules, DefaultConfigs } from "@proto-kit/stack";
+import protocol from "../src/protocol";
+import { GovernanceLifecycleTransactionHook } from "../src/protocol/governance-life-cycle";
 
 export function fromRuntime<
   RuntimeModules extends RuntimeModulesRecord &
     PartialVanillaRuntimeModulesRecord,
 >(runtimeModules: RuntimeModules) {
   const appChain = new TestingAppChain({
-    Runtime: Runtime.from({
-      modules: VanillaRuntimeModules.with(runtimeModules),
-    }),
-    Protocol: Protocol.from({
-      modules: VanillaProtocolModules.with({
+    Runtime: Runtime.from(
+      VanillaRuntimeModules.with(runtimeModules),
+    ),
+    Protocol: Protocol.from(
+      VanillaProtocolModules.with({
         GovernanceLifecycle: GovernanceLifecycleTransactionHook,
+        ...protocol.settlementModules
       }),
-    }),
+    ),
     Sequencer: Sequencer.from({
-      modules: InMemorySequencerModules.with({}),
-    }),
-    modules: {
+      ...InMemorySequencerModules.with({}),
+      ...DefaultModules.settlement(),
+      BridgingModule: BridgingModule,
+    }
+    ),
       Signer: InMemorySigner,
       TransactionSender: InMemoryTransactionSender,
       QueryTransportModule: StateServiceQueryModule,
       NetworkStateTransportModule: BlockStorageNetworkStateModule,
-    },
+      BlockExplorerTransportModule: InMemoryBlockExplorer
   });
+
 
   appChain.configurePartial({
     Protocol: {
-      AccountState: {},
-      BlockProver: {},
-      StateTransitionProver: {},
-      BlockHeight: {},
-      LastStateRoot: {},
+      ...Protocol.defaultConfig(),
       TransactionFee: {
         tokenId: 0n,
         feeRecipient: PrivateKey.random().toPublicKey().toBase58(),
@@ -60,37 +62,31 @@ export function fromRuntime<
         goverancePeriodDurationInBlocks: 1n,
         maximumGovernancePeriod: 3n,
       },
+      ...protocol.settlementModulesConfig
     },
     Sequencer: {
       Database: {},
       BlockTrigger: {},
       Mempool: {},
       BlockProducerModule: {},
-      LocalTaskWorkerModule: {
-        StateTransitionTask: {},
-        RuntimeProvingTask: {},
-        StateTransitionReductionTask: {},
-        BlockReductionTask: {},
-        BlockProvingTask: {},
-        BlockBuildingTask: {},
-      },
-      BaseLayer: {},
-      UnprovenProducerModule: {},
+      ...DefaultConfigs.settlement({preset:"development"}),
       TaskQueue: {
         simulatedDuration: 0,
       },
-      // TODO: this is commented out in "framework", why is it part of the modules here?
-      SettlementModule: {
-        feepayer: PrivateKey.random(),
-      },
+      FeeStrategy:{},
+      BatchProducerModule: {},
+      SequencerStartupModule: {},
+      BridgingModule: {}
     },
+    BlockExplorerTransportModule:{},
     Signer: {
-      signer: PrivateKey.random(),
+      signer: PrivateKey.random()                                                                                                                 
     },
     TransactionSender: {},
     QueryTransportModule: {},
     NetworkStateTransportModule: {},
   });
+
 
   return appChain;
 }
