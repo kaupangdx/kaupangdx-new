@@ -10,31 +10,31 @@ export class Faucet extends RuntimeModule {
     super();
   }
 
-  public drip(tokenId: TokenId, address: PublicKey, amount: Balance) {
-    this.balances.mintAndIncrementSupply(tokenId, address, amount);
+  public async drip(tokenId: TokenId, address: PublicKey, amount: Balance) {
+    await this.balances.mintAndIncrementSupply(tokenId, address, amount);
   }
 
   @runtimeMethod()
-  public dripSigned(tokenId: TokenId, amount: Balance) {
-    this.drip(tokenId, this.transaction.sender.value, amount);
+  public async dripSigned(tokenId: TokenId, amount: Balance) {
+    await this.drip(tokenId, this.transaction.sender.value, amount);
   }
 
   // testing method for the UI
   @runtimeMethod()
-  public dripBundle() {
-    this.drip(
+  public async dripBundle() {
+    await this.drip(
       TokenId.from("0"),
       this.transaction.sender.value,
       Balance.from(1000n * 10n ** 2n)
     );
 
-    this.drip(
+    await this.drip(
       TokenId.from("1"),
       this.transaction.sender.value,
       Balance.from(1000n * 10n ** 2n)
     );
 
-    this.drip(
+    await this.drip(
       TokenId.from("2"),
       this.transaction.sender.value,
       Balance.from(1000n * 10n ** 2n)

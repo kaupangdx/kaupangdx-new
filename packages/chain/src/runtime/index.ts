@@ -1,11 +1,11 @@
 import { Balance, VanillaRuntimeModules } from "@proto-kit/library";
-import { Faucet } from "./faucet";
+import { Faucet } from "./modules/faucet";
 import { ModulesConfig } from "@proto-kit/common";
-import { Locks } from "./locks";
-import { Balances } from "./balances";
+import { Locks } from "./modules/locks";
+import { Balances } from "./modules/balances";
 import { SetDelegateProposal } from "./governance/set-delegate-proposal";
-import { OutgoingMessages } from "./outgoing-messages";
-import { TokenRegistry } from "./token-registry";
+import { OutgoingMessages } from "./modules/outgoing-messages";
+import { TokenRegistry } from "./modules/token-registry";
 import { XYK } from "./xyk/xyk";
 
 export const modules = {

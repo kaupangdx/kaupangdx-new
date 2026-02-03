@@ -1,21 +1,20 @@
 import {
   RuntimeModule,
   runtimeMethod,
-  runtimeModule,
-  state,
+  runtimeModule
 } from "@proto-kit/module";
-import { Protocol, State, StateMap, assert } from "@proto-kit/protocol";
+import { Protocol, State, StateMap, assert, state } from "@proto-kit/protocol";
 import { Bool, Field, Provable, PublicKey, Struct } from "o1js";
-import { BlockHeight, LockKey, Locks } from "../locks";
+import { BlockHeight, LockKey, Locks } from "../modules/locks";
 import { inject } from "tsyringe";
 import {
   GovernanceLifecycleTransactionHook,
   GovernancePeriod,
   GovernancePeriodId,
-} from "../../protocol/governance-lifecycle";
+} from "../../protocol/governance-life-cycle"
 import { Balance, TokenId, UInt64 } from "@proto-kit/library";
-import { Balances } from "../balances";
-import { OutgoingMessages, OutgoingMessagesCursor } from "../outgoing-messages";
+import { Balances } from "../modules/balances";
+import { OutgoingMessages, OutgoingMessagesCursor } from "../modules/outgoing-messages";
 
 export class ProposalId extends Field {}
 export class Proposal extends Struct({
@@ -71,8 +70,8 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
     this.governanceLifecycle = this.protocol.resolve("GovernanceLifecycle");
   }
 
-  public getMinimalRequiredWeightToPropose() {
-    const totalSupply = this.balances.totalSupply.get(TokenId.from(0n)).value;
+  public async getMinimalRequiredWeightToPropose() {
+    const totalSupply = (await this.balances.totalSupply.get(TokenId.from(0n)));
     const minimalRequiredWeightToPropose = Balance.from(totalSupply.value)
       .mul(this.config.minimalRequiredWeightPercentageToPropose)
       .div(this.config.precisionDivider);
@@ -80,13 +79,13 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
     return minimalRequiredWeightToPropose;
   }
 
-  public calculateVotingWeight(
+  public async calculateVotingWeight(
     currentGovernancePeriod: GovernancePeriod,
     currentGovernancePeriodStartedAtBlock: BlockHeight,
     lockKey: LockKey
   ) {
-    const lock = this.locks.locks.get(lockKey);
-    const isLockUsed = this.usedLocks.get(lockKey).isSome;
+    const lock = await this.locks.locks.get(lockKey);
+    const isLockUsed = (await this.usedLocks.get(lockKey)).isSome;
 
     const maximumGovernancePeriod = Field(
       this.governanceLifecycle.config.maximumGovernancePeriod + 1n
@@ -97,11 +96,11 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
 
     // locks need to expire at least n governance periods after the current one (after the execution period)
     const minimalLockExpiresAt = BlockHeight.from(
-      currentGovernancePeriodStartedAtBlock.value
+      currentGovernancePeriodStartedAtBlock
     ).add(
       BlockHeight.from(
         this.governanceLifecycle.config.goverancePeriodDurationInBlocks
-      ).mul(BlockHeight.from(blocksUntilGovernanceLifecycleEnds))
+      ).mul(BlockHeight.Safe.fromField(blocksUntilGovernanceLifecycleEnds))
     );
 
     const isLockDurationAboveMinimalExpiresAt = BlockHeight.from(
@@ -117,10 +116,11 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
     ).lessThan(minimalLockExpiresAt);
 
     const lockDurationBeyondMinimal = new BlockHeight(
-      lock.value.expiresAt.value.sub(minimalLockExpiresAt.value)
+      {value: lock.value.expiresAt.value.sub(minimalLockExpiresAt.value)}
     );
 
-    const adjustedLockDurationBeyondMinimal = BlockHeight.from(
+
+    const adjustedLockDurationBeyondMinimal = BlockHeight.Safe.fromField(
       Provable.if(
         lockExpiresAtLessThanMinimal,
         BlockHeight,
@@ -163,22 +163,21 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
     return votingWeight;
   }
 
-  public propose(delegate: PublicKey, lockKey: LockKey) {
-    const lastProposalId = this.lastProposalId.get().value;
+  public async propose(delegate: PublicKey, lockKey: LockKey) {
+    const lastProposalId = await this.lastProposalId.get();
     const currentGovernancePeriod =
-      this.governanceLifecycle.currentGovernancePeriod.get().value;
-    const currentGovernancePeriodStartedAtBlock = BlockHeight.from(
-      this.governanceLifecycle.currentGovernancePeriodStartedAtBlock.get().value
-        .value
+      (await this.governanceLifecycle.currentGovernancePeriod.get()).value;
+    const currentGovernancePeriodStartedAtBlock = BlockHeight.Safe.fromField(
+      (await this.governanceLifecycle.currentGovernancePeriodStartedAtBlock.get()).value.value
     );
 
-    const votingWeight = this.calculateVotingWeight(
+    const votingWeight = await this.calculateVotingWeight(
       currentGovernancePeriod,
       currentGovernancePeriodStartedAtBlock,
       lockKey
     );
     const minimalRequiredWeightToPropose =
-      this.getMinimalRequiredWeightToPropose();
+     await this.getMinimalRequiredWeightToPropose();
     const isVotingWeightAboveMinimalRequiredWeightToPropose =
       votingWeight.greaterThanOrEqual(minimalRequiredWeightToPropose);
 
@@ -196,25 +195,25 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
       delegate,
     });
 
-    const nextProposalId = lastProposalId.add(1n);
+    const nextProposalId = lastProposalId.value.add(1n);
 
-    this.lastProposalId.set(nextProposalId);
-    this.proposals.set(nextProposalId, proposal);
-    this.usedLocks.set(lockKey, Bool(true));
+    await this.lastProposalId.set(nextProposalId);
+    await this.proposals.set(nextProposalId, proposal);
+    await this.usedLocks.set(lockKey, Bool(true));
   }
 
-  public vote(proposalId: ProposalId, lockKey: LockKey, vote: Bool) {
-    const proposal = this.proposals.get(proposalId);
+  public async vote(proposalId: ProposalId, lockKey: LockKey, vote: Bool) {
+    const proposal = await this.proposals.get(proposalId);
     const currentGovernancePeriod =
-      this.governanceLifecycle.currentGovernancePeriod.get().value;
-    const currentGovernancePeriodStartedAtBlock = BlockHeight.from(
-      this.governanceLifecycle.currentGovernancePeriodStartedAtBlock.get().value
-        .value
+      (await this.governanceLifecycle.currentGovernancePeriod.get()).value;
+    const currentGovernancePeriodStartedAtBlock = BlockHeight.Safe.fromField(
+      (await this.governanceLifecycle.currentGovernancePeriodStartedAtBlock.get()).value
+      .value
     );
 
-    const votes = this.votes.get(proposalId).value;
+    const votes = (await this.votes.get(proposalId)).value;
 
-    const votingWeight = this.calculateVotingWeight(
+    const votingWeight = await this.calculateVotingWeight(
       currentGovernancePeriod,
       currentGovernancePeriodStartedAtBlock,
       lockKey
@@ -226,15 +225,16 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
       "Current governance period does not allow voting on proposals"
     );
 
-    const updatedYay = UInt64.from(
-      Provable.if(
+    const updatedYay = UInt64.Safe.fromField(
+        Provable.if(
         vote,
         UInt64,
         UInt64.from(votes.yay).add(votingWeight),
         votes.yay
       ).value
     );
-    const updatedNay = UInt64.from(
+
+    const updatedNay = UInt64.Safe.fromField(
       Provable.if(
         vote.not(),
         UInt64,
@@ -242,6 +242,7 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
         votes.nay
       ).value
     );
+
     const updatedVotes = new Votes({
       yay: updatedYay,
       nay: updatedNay,
@@ -257,21 +258,20 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
       currentGovernancePeriod
     );
 
-    this.usedLocks.set(lockKey, Bool(true));
-    this.votes.set(proposalId, updatedVotes);
-    this.proposalLastVotedAt.set(proposalId, proposalLastVotedAt);
+    await this.usedLocks.set(lockKey, Bool(true));
+    await this.votes.set(proposalId, updatedVotes);
+    await this.proposalLastVotedAt.set(proposalId, proposalLastVotedAt);
   }
 
   @runtimeMethod()
-  public execute(proposalId: ProposalId) {
-    const isProposalExecuted = this.executedProposals.get(proposalId).isSome;
-    const proposalLastVotedAt = this.proposalLastVotedAt.get(proposalId).value;
+  public async execute(proposalId: ProposalId) {
+    const isProposalExecuted = (await this.executedProposals.get(proposalId)).isSome;
+    const proposalLastVotedAt = (await this.proposalLastVotedAt.get(proposalId)).value;
     const totalSupplySnapshot = Balance.from(
-      this.governanceLifecycle.totalSupplySnapshots.get(proposalLastVotedAt)
-        .value
+      (await this.governanceLifecycle.totalSupplySnapshots.get(proposalLastVotedAt)).value
     );
 
-    const votes = this.votes.get(proposalId).value;
+    const votes = (await this.votes.get(proposalId)).value;
     const totalVotes = UInt64.from(votes.nay).add(votes.yay);
 
     Provable.log("execute", {
@@ -282,7 +282,7 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
     const participationPercentageDivider = totalSupplySnapshot.div(100);
     const isParticipationPercentageDividerZero =
       participationPercentageDivider.value.equals(0n);
-    const adjustedParticipationPercentageDivider = UInt64.from(
+    const adjustedParticipationPercentageDivider = UInt64.Safe.fromField(
       Provable.if(
         isParticipationPercentageDividerZero,
         Field.from(1n),
@@ -307,7 +307,7 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
     const oneVotePercentageDivider = totalVotes.div(100);
     const isOneVotePercentageDividerZero =
       oneVotePercentageDivider.value.equals(0n);
-    const adjustedOneVotePercentageDivider = UInt64.from(
+    const adjustedOneVotePercentageDivider = UInt64.Safe.fromField(
       Provable.if(
         isOneVotePercentageDividerZero,
         Field.from(1n),
@@ -331,29 +331,29 @@ export class SetDelegateProposal extends RuntimeModule<SetDelegateProposalConfig
     assert(wasParticipationSufficient, "Participation too low");
     assert(yayWins, "Insufficient yay votes");
 
-    const outgoingMessagesCursor = this.outgoingMessages.incrementCursor();
-    this.executedProposals.set(proposalId, outgoingMessagesCursor);
+    const outgoingMessagesCursor = await this.outgoingMessages.incrementCursor();
+    await this.executedProposals.set(proposalId, outgoingMessagesCursor);
   }
 
   @runtimeMethod()
-  public proposeSigned(delegate: PublicKey, lockKey: LockKey) {
+  public async proposeSigned(delegate: PublicKey, lockKey: LockKey) {
     const sender = this.transaction.sender.value;
     assert(
       sender.equals(lockKey.address),
       "Lock address does not match sender"
     );
 
-    this.propose(delegate, lockKey);
+    await this.propose(delegate, lockKey);
   }
 
   @runtimeMethod()
-  public voteSigned(proposalId: ProposalId, lockKey: LockKey, vote: Bool) {
+  public async voteSigned(proposalId: ProposalId, lockKey: LockKey, vote: Bool) {
     const sender = this.transaction.sender.value;
     assert(
       sender.equals(lockKey.address),
       "Lock address does not match sender"
     );
 
-    this.vote(proposalId, lockKey, vote);
+    await this.vote(proposalId, lockKey, vote);
   }
 }

@@ -3,9 +3,8 @@ import {
   RuntimeModule,
   runtimeMethod,
   runtimeModule,
-  state,
 } from "@proto-kit/module";
-import { StateMap, assert } from "@proto-kit/protocol";
+import { StateMap, assert,  state } from "@proto-kit/protocol";
 import { Field, PublicKey, Struct, Bool } from "o1js";
 import { inject } from "tsyringe";
 
@@ -49,15 +48,15 @@ export class Locks extends RuntimeModule {
     super();
   }
 
-  public lock(
+  public async lock(
     address: PublicKey,
     tokenId: TokenId,
     amount: Balance,
     reason: LockReason,
     expiresAt: BlockHeight
   ) {
-    const lastAddressLockId = this.lastAddressLockId.get(address).value;
-    const lockId = lastAddressLockId.add(1);
+    const lastAddressLockId = await this.lastAddressLockId.get(address);
+    const lockId = lastAddressLockId.value.add(1);
     const key = new LockKey({ address, tokenId, lockId });
     const hasBeenUnlocked = Bool(false);
 
@@ -69,20 +68,20 @@ export class Locks extends RuntimeModule {
     });
 
     assert(
-      BlockHeight.from(this.network.block.height).lessThan(expiresAt),
+      this.network.block.height.value.lessThan(expiresAt.value),
       "Cannot create a lock that expires in the past"
     );
 
-    this.balances.burn(tokenId, address, amount);
-    this.locks.set(key, lock);
-    this.lastAddressLockId.set(address, lockId);
+    await this.balances.burn(tokenId, address, amount);
+    await this.locks.set(key, lock);
+    await this.lastAddressLockId.set(address, lockId);
   }
 
-  public unlock(tokenId: TokenId, address: PublicKey, lockId: LockId) {
+  public async unlock(tokenId: TokenId, address: PublicKey, lockId: LockId) {
     const key = new LockKey({ address, tokenId, lockId });
-    const lock = this.locks.get(key);
-    const isExpired = BlockHeight.from(
-      this.network.block.height
+    const lock = await this.locks.get(key);
+    const isExpired = BlockHeight.Safe.fromField(
+      this.network.block.height.value
     ).greaterThanOrEqual(lock.value.expiresAt);
 
     // TODO: extract error messages
@@ -93,21 +92,21 @@ export class Locks extends RuntimeModule {
     const hasBeenUnlocked = Bool(true);
     const updatedLock = new Lock({ ...lock.value, hasBeenUnlocked });
 
-    this.locks.set(key, updatedLock);
-    this.balances.mint(key.tokenId, key.address, lock.value.amount);
+    await this.locks.set(key, updatedLock);
+    await this.balances.mint(key.tokenId, key.address, lock.value.amount);
   }
 
   @runtimeMethod()
-  public lockSigned(tokenId: TokenId, amount: Balance, expiresAt: BlockHeight) {
+  public async lockSigned(tokenId: TokenId, amount: Balance, expiresAt: BlockHeight) {
     const address = this.transaction.sender.value;
     const reason = LockReason.voluntary();
 
-    this.lock(address, tokenId, amount, reason, expiresAt);
+    await this.lock(address, tokenId, amount, reason, expiresAt);
   }
 
   @runtimeMethod()
-  public unlockSigned(tokenId: TokenId, lockId: LockId) {
+  public async unlockSigned(tokenId: TokenId, lockId: LockId) {
     const address = this.transaction.sender.value;
-    this.unlock(tokenId, address, lockId);
+    await this.unlock(tokenId, address, lockId);
   }
 }

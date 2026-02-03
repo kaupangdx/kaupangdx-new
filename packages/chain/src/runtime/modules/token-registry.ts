@@ -1,7 +1,7 @@
 import { NoConfig } from "@proto-kit/common";
 import { TokenId } from "@proto-kit/library";
-import { RuntimeModule, state } from "@proto-kit/module";
-import { State, StateMap } from "@proto-kit/protocol";
+import { RuntimeModule } from "@proto-kit/module";
+import { State, StateMap, state } from "@proto-kit/protocol";
 import { Field } from "o1js";
 
 export class TokenIdId extends Field {}
@@ -16,11 +16,11 @@ export class TokenRegistry extends RuntimeModule<NoConfig> {
   @state() tokenIds = StateMap.from<TokenIdId, TokenId>(TokenIdId, TokenId);
   @state() lastTokenIdId = State.from(TokenIdId);
 
-  public addTokenId(tokenId: TokenId) {
-    const lastTokenIdId = this.lastTokenIdId.get().value;
-    const nextTokenIdId = lastTokenIdId.add(1);
-
-    this.lastTokenIdId.set(nextTokenIdId);
-    this.tokenIds.set(nextTokenIdId, tokenId);
-  }
+  public async addTokenId(tokenId: TokenId) {
+    const lastTokenIdId = await this.lastTokenIdId.get();
+    const nextTokenIdId = lastTokenIdId.value.add(1);
+  
+    await this.lastTokenIdId.set(nextTokenIdId);
+    await this.tokenIds.set(nextTokenIdId, tokenId);
+}
 }
