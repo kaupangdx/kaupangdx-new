@@ -1,23 +1,18 @@
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import {
-  ChevronsLeft,
   ChevronsRight,
-  Construction,
   Loader2Icon,
-  LoaderIcon,
   PiggyBank,
   Wallet as WalletIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { GeistMono } from "geist/font/mono";
 import { Balance } from "../ui/balance";
 import { USDBalance } from "../ui/usd-balance";
 // @ts-ignore
 import truncateMiddle from "truncate-middle";
-import { BlockHeight } from "chain/dist/runtime/locks";
-import { tokens } from "@/tokens";
-import { Skeleton } from "@/components/ui/skeleton";
+import {tokens} from "@/tokens";
+
 
 export interface Balances {
   [tokenId: string]: string | undefined;
@@ -146,8 +141,7 @@ export function Wallet({
               </p>
               <p
                 className={cn(
-                  "max-w-32 text-sm text-muted-foreground",
-                  GeistMono.className,
+                  "max-w-32 text-sm text-muted-foreground font-mono",
                 )}
               >
                 <USDBalance balance={undefined} />
@@ -162,7 +156,7 @@ export function Wallet({
               <div className="grid gap-2">
                 {Object.entries(balances ?? {}).map(([tokenId, balance]) => {
                   const token = tokens[tokenId];
-                  if (!token || (BigInt(tokenId) > 3n && balance == "0"))
+                  if (!token || (BigInt(tokenId) > BigInt(3) && balance === "0"))
                     return null;
                   return (
                     <div className="flex items-center justify-between">
@@ -181,8 +175,7 @@ export function Wallet({
                         </p>
                         <p
                           className={cn(
-                            "text-sm text-muted-foreground",
-                            GeistMono.className,
+                            "text-sm text-muted-foreground font-mono",
                           )}
                         >
                           <USDBalance balance={undefined} />

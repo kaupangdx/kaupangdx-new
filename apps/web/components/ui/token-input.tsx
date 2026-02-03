@@ -1,9 +1,6 @@
-import { ArrowDown } from "lucide-react";
-import { Button } from "./button";
 import { Card } from "./card";
 import { Input } from "./input";
 import { TokenSelector } from "./token-selector";
-import { GeistMono } from "geist/font/mono";
 import { cn } from "@/lib/utils";
 import { USDBalance } from "./usd-balance";
 import { useFormContext } from "react-hook-form";
@@ -38,8 +35,7 @@ export function TokenInput({
           disabled={amountInputDisabled}
           placeholder="0"
           className={cn([
-            "mr-4 h-auto border-0  p-0 text-3xl focus-visible:ring-0 focus-visible:ring-offset-0",
-            GeistMono.className,
+            "mr-4 h-auto border-0  p-0 text-3xl focus-visible:ring-0 focus-visible:ring-offset-0 font-mono",
           ])}
         />
         {!tokenInputHidden && (

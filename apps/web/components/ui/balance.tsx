@@ -1,7 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { tokens } from "@/tokens";
-import { GeistMono } from "geist/font/mono";
 import { UInt64 } from "o1js";
 import { useMemo } from "react";
 
@@ -46,7 +45,7 @@ export function Balance({ balance, tokenId }: BalanceProps) {
   }, [balance]);
 
   return (
-    <span className={cn(GeistMono.className)}>
+    <span className="font-mono">
       {formattedBalance ?? "—"} {tokenId ? tokens[tokenId]?.ticker : <></>}
     </span>
   );
