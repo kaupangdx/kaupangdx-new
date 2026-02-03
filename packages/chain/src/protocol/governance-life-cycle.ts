@@ -1,16 +1,19 @@
 import { Balance, TokenId, UInt64 } from "@proto-kit/library";
 import {
-  BlockProverExecutionData,
+    AfterTransactionHookArguments,
+    BeforeTransactionHookArguments,
+  NetworkState,
   ProvableTransactionHook,
   State,
   StateMap,
-  protocolState,
+  state
 } from "@proto-kit/protocol";
 import { Field, Poseidon, Provable } from "o1js";
 import { inject, injectable } from "tsyringe";
 import { modules } from "../runtime";
 import { Runtime } from "@proto-kit/module";
-import { Balances } from "../runtime/balances";
+import { Balances } from "../runtime/modules/balances";
+import { noop } from "@proto-kit/common";
 
 export class GovernancePeriod extends Field {}
 export class BlockHeight extends UInt64 {}
@@ -53,13 +56,13 @@ export interface GovernanceLifecycleBlockHookConfig {
  */
 @injectable()
 export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<GovernanceLifecycleBlockHookConfig> {
-  @protocolState() public currentGovernancePeriod =
+  @state() public currentGovernancePeriod =
     State.from(GovernancePeriod);
 
-  @protocolState() public currentGovernancePeriodStartedAtBlock =
+  @state() public currentGovernancePeriodStartedAtBlock =
     State.from(BlockHeight);
 
-  @protocolState() public totalSupplySnapshots = StateMap.from<
+  @state() public totalSupplySnapshots = StateMap.from<
     GovernancePeriodId,
     Balance
   >(GovernancePeriodId, Balance);
@@ -73,18 +76,18 @@ export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<
     this.balances = runtime.resolve("Balances");
   }
 
-  public onTransaction({ networkState }: BlockProverExecutionData) {
-    const currentGovernancePeriod = this.currentGovernancePeriod
-      .get()
+  public async onTransaction( networkState: NetworkState) {
+    const currentGovernancePeriod = (await this.currentGovernancePeriod
+      .get())
       .orElse(GovernancePeriod.from(0));
 
-    const currentGovernancePeriodStartedAtBlock = BlockHeight.from(
-      this.currentGovernancePeriodStartedAtBlock
-        .get()
+    const currentGovernancePeriodStartedAtBlock = BlockHeight.Safe.fromField(
+      (await this.currentGovernancePeriodStartedAtBlock
+        .get())
         .orElse(BlockHeight.from(0)).value
     );
 
-    const currentBlockHeight = BlockHeight.from(networkState.block.height);
+    const currentBlockHeight = BlockHeight.Safe.fromField(networkState.block.height.value);
 
     /**
      * Calculate the number of blocks that have passed since the start
@@ -125,19 +128,26 @@ export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<
       currentGovernancePeriod
     );
 
-    const totalSupply = Balance.from(
-      this.balances.totalSupply.get(TokenId.from(0n)).value
+    const totalSupply = Balance.Safe.fromField(
+      (await this.balances.totalSupply.get(TokenId.from(0n))).value.value
     );
 
     // update the state with the determined governance period
-    this.currentGovernancePeriod.set(nextGovernancePeriod);
-    this.currentGovernancePeriodStartedAtBlock.set(currentBlockHeight);
-    this.totalSupplySnapshots.set(
+    await this.currentGovernancePeriod.set(nextGovernancePeriod);
+    await this.currentGovernancePeriodStartedAtBlock.set(currentBlockHeight);
+    await this.totalSupplySnapshots.set(
       GovernancePeriodId.fromGovernancePeriod(
         currentGovernancePeriodStartedAtBlock,
         currentGovernancePeriod
       ),
       totalSupply
     );
+  }
+  
+  public async beforeTransaction(executionData: BeforeTransactionHookArguments): Promise<void> {
+      noop();
+  }
+  public async afterTransaction(execution: AfterTransactionHookArguments): Promise<void> {
+      noop();
   }
 }
