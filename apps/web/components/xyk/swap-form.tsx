@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/collapsible";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { GeistMono } from "geist/font/mono";
 import { USDBalance } from "../ui/usd-balance";
 import { useFormContext } from "react-hook-form";
 import { tokens } from "@/tokens";
@@ -71,7 +70,7 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
       <Collapsible onOpenChange={setDetailsOpen}>
         <div className="mt-4 flex justify-between">
           <div className="flex items-center">
-            <p className={cn("mr-1.5 text-sm", GeistMono.className)}>
+            <p className={cn("mr-1.5 text-sm font-mono")}>
               {unitPriceWrapped ? (
                 `1 ${unitPriceWrapped.tokenIn} = ${unitPrice} ${unitPriceWrapped.tokenOut}`
               ) : (
@@ -81,8 +80,7 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
             {unitPriceWrapped && (
               <p
                 className={cn(
-                  "text-sm text-muted-foreground",
-                  GeistMono.className,
+                  "text-sm text-muted-foreground font-mono",
                 )}
               >
                 (<USDBalance />)
@@ -122,23 +120,6 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
               )}
             </div>
           </div>
-          {/* <div className="flex justify-between text-sm">
-            <p className="text-muted-foreground">Spot price</p>
-            <div className="flex">
-              <p className={cn(GeistMono.className)}>1 MINA = 0.8 DAI</p>
-              <p
-                className={
-                  (cn(GeistMono.className), "pl-1.5 text-muted-foreground")
-                }
-              >
-                (<USDBalance />)
-              </p>
-            </div>
-          </div> */}
-          {/* <div className="flex justify-between text-sm">
-            <p className="text-muted-foreground">Network cost</p>
-            <div>🎉 Free</div>
-          </div> */}
         </CollapsibleContent>
       </Collapsible>
     </>
