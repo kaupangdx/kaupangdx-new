@@ -2,8 +2,6 @@
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import AsyncLayoutDynamic from "@/containers/async-layout-dynamic";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
 
 export default function RootLayout({
   children,
@@ -15,7 +13,6 @@ export default function RootLayout({
       <body
         className={cn(
           "h-full bg-background font-sans antialiased",
-          GeistSans.className,
         )}
       >
         <AsyncLayoutDynamic>{children}</AsyncLayoutDynamic>
