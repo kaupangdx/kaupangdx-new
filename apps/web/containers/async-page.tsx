@@ -2,7 +2,7 @@
 
 import { Home as HomeComponent } from "@/components/home";
 import { Wallet } from "@/components/wallet/wallet";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect } from "react";
 import { useNotifyTransactions, useWalletStore } from "@/lib/stores/wallet";
 import {
   useBalancesStore,
