@@ -109,8 +109,8 @@ export const useBalancesStore = create<
       const faucet = client.runtime.resolve("Faucet");
       const sender = PublicKey.fromBase58(address);
 
-      const tx = await client.transaction(sender, () => {
-        faucet.dripBundle();
+      const tx = await client.transaction(sender, async () => {
+        await faucet.dripBundle();
       });
 
       await tx.sign();
@@ -129,8 +129,8 @@ export const useBalancesStore = create<
       const balances = client.runtime.resolve("Balances");
       const sender = PublicKey.fromBase58(address);
 
-      const tx = await client.transaction(sender, () => {
-        balances.transferSigned(
+      const tx = await client.transaction(sender, async () => {
+        await balances.transferSigned(
           TokenId.from(tokenId),
           sender,
           PublicKey.fromBase58(recipient),
