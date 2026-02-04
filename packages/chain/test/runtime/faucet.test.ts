@@ -26,6 +26,10 @@ describe("faucet", () => {
     faucet = appChain.runtime.resolve("Faucet");
   });
 
+  afterAll(async () => {
+    await appChain.close();
+  });
+
   it("should drip tokens", async () => {
     const tx = await appChain.transaction(alice, async () => {
       await faucet.dripSigned(tokenId, balanceToDrip);
