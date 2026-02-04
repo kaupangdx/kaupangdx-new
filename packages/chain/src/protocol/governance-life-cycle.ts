@@ -76,7 +76,7 @@ export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<
     this.balances = runtime.resolve("Balances");
   }
 
-  public async onTransaction( networkState: NetworkState) {
+  public async beforeTransaction( { networkState } : BeforeTransactionHookArguments) {
     const currentGovernancePeriod = (await this.currentGovernancePeriod
       .get())
       .orElse(GovernancePeriod.from(0));
@@ -144,9 +144,6 @@ export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<
     );
   }
   
-  public async beforeTransaction(executionData: BeforeTransactionHookArguments): Promise<void> {
-      noop();
-  }
   public async afterTransaction(execution: AfterTransactionHookArguments): Promise<void> {
       noop();
   }
