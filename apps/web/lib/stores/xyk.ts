@@ -314,10 +314,7 @@ export const useObservePool = (key: string) => {
 
   useEffect(() => {
      if (client.client === undefined) return;  
-      // Debug Logs
-      console.log("loadPool called with key:", key, "length:", key.length);                                                                                                                           
-      loadPool(client.client, key).catch((err) => {                                                                                                                                                   
-      console.error("loadPool failed for key:", key, err);                                                                                                                                          
+      loadPool(client.client, key).catch((err) => {
     });                                                                                                                                                                                             
     }, [client.client, key, chain.block?.height]);                                                                                                                                                    
 
