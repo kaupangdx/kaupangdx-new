@@ -5,7 +5,11 @@ import {
 } from "@proto-kit/library";
 import { Runtime, RuntimeModulesRecord } from "@proto-kit/module";
 import { Protocol } from "@proto-kit/protocol";
-import { BridgingModule, Sequencer, VanillaTaskWorkerModules } from "@proto-kit/sequencer";
+import {
+  BridgingModule,
+  Sequencer,
+  VanillaTaskWorkerModules,
+} from "@proto-kit/sequencer";
 import {
   BlockStorageNetworkStateModule,
   InMemoryBlockExplorer,
@@ -25,28 +29,21 @@ export function fromRuntime<
     PartialVanillaRuntimeModulesRecord,
 >(runtimeModules: RuntimeModules) {
   const appChain = new TestingAppChain({
-    Runtime: Runtime.from(
-      VanillaRuntimeModules.with(runtimeModules),
-    ),
+    Runtime: Runtime.from(VanillaRuntimeModules.with(runtimeModules)),
     Protocol: Protocol.from(
       VanillaProtocolModules.with({
         GovernanceLifecycle: GovernanceLifecycleTransactionHook,
-        ...protocol.settlementModules
-      }),
+      })
     ),
     Sequencer: Sequencer.from({
       ...InMemorySequencerModules.with({}),
-      ...DefaultModules.settlement(),
-      BridgingModule: BridgingModule,
-    }
-    ),
-      Signer: InMemorySigner,
-      TransactionSender: InMemoryTransactionSender,
-      QueryTransportModule: StateServiceQueryModule,
-      NetworkStateTransportModule: BlockStorageNetworkStateModule,
-      BlockExplorerTransportModule: InMemoryBlockExplorer
+    }),
+    Signer: InMemorySigner,
+    TransactionSender: InMemoryTransactionSender,
+    QueryTransportModule: StateServiceQueryModule,
+    NetworkStateTransportModule: BlockStorageNetworkStateModule,
+    BlockExplorerTransportModule: InMemoryBlockExplorer,
   });
-
 
   appChain.configurePartial({
     Protocol: {
@@ -62,31 +59,28 @@ export function fromRuntime<
         goverancePeriodDurationInBlocks: 1n,
         maximumGovernancePeriod: 3n,
       },
-      ...protocol.settlementModulesConfig
     },
     Sequencer: {
       Database: {},
       BlockTrigger: {},
       Mempool: {},
       BlockProducerModule: {},
-      ...DefaultConfigs.settlement({preset:"development"}),
+      ...DefaultConfigs.settlement({ preset: "development" }),
       TaskQueue: {
         simulatedDuration: 0,
       },
-      FeeStrategy:{},
+      FeeStrategy: {},
       BatchProducerModule: {},
       SequencerStartupModule: {},
-      BridgingModule: {}
     },
-    BlockExplorerTransportModule:{},
+    BlockExplorerTransportModule: {},
     Signer: {
-      signer: PrivateKey.random()                                                                                                                 
+      signer: PrivateKey.random(),
     },
     TransactionSender: {},
     QueryTransportModule: {},
     NetworkStateTransportModule: {},
   });
-
 
   return appChain;
 }

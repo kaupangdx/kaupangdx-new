@@ -43,6 +43,10 @@ describe("set delegate proposal", () => {
     setDelegateProposal = appChain.runtime.resolve("SetDelegateProposal");
   });
 
+  afterAll(async () => {
+    await appChain.close();
+  });
+
   async function queryLock(
     tokenId: TokenId,
     address: PublicKey,

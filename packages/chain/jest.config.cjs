@@ -10,7 +10,7 @@ module.exports = {
   testPathIgnorePatterns: ["dist"],
   extensionsToTreatAsEsm: [".ts"],
   testTimeout: 30_000,
-  setupFilesAfterEnv: ["jest-expect-message"],
+  setupFilesAfterEnv: ["jest-expect-message", "./console-jest.config.js"],
   moduleNameMapper: {
     "o1js/dist/(.*)": "<rootDir>/node_modules/o1js/dist/$1",
     "^(\\.{1,2}/.*)\\.js$": "$1",
@@ -25,4 +25,5 @@ module.exports = {
       },
     ],
   },
+  maxConcurrency: 1,
 };

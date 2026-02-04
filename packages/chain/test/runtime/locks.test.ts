@@ -10,6 +10,7 @@ import {
   LockReason,
   Locks,
 } from "../../src/runtime/modules/locks";
+import { afterAll } from "@jest/globals";
 
 describe("locks", () => {
   const alicePrivateKey = PrivateKey.random();
@@ -98,6 +99,10 @@ describe("locks", () => {
     locks = appChain.runtime.resolve("Locks");
   });
 
+  afterAll(async () => {
+    await appChain.close();
+  });
+
   describe("lock and unlock lifecycle", () => {
     beforeAll(async () => {
       await drip(appChain, alicePrivateKey, tokenId, amount);
@@ -108,10 +113,13 @@ describe("locks", () => {
       const { network } = await queryNetwork();
       const currentBlockHeight = network?.block.height;
 
-      if (currentBlockHeight === undefined) throw new Error("Block height not found");
+      if (currentBlockHeight === undefined)
+        throw new Error("Block height not found");
 
       // expires in lock block height + 1
-      const expiresAt = BlockHeight.Safe.fromField(currentBlockHeight.value).add(2);
+      const expiresAt = BlockHeight.Safe.fromField(
+        currentBlockHeight.value
+      ).add(2);
 
       await lockSigned(tokenId, alicePrivateKey, expiresAt);
       await appChain.produceBlock();

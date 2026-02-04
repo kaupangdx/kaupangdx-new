@@ -41,7 +41,12 @@ describe("xyk", () => {
     const tx = await appChain.transaction(
       senderPrivateKey.toPublicKey(),
       async () => {
-        await xyk.createPoolSigned(tokenAId, tokenBId, tokenAAmount, tokenBAmount);
+        await xyk.createPoolSigned(
+          tokenAId,
+          tokenBId,
+          tokenAAmount,
+          tokenBAmount
+        );
       },
       options
     );
@@ -67,7 +72,12 @@ describe("xyk", () => {
     const tx = await appChain.transaction(
       senderPrivateKey.toPublicKey(),
       async () => {
-        await xyk.addLiquiditySigned(tokenAId, tokenBId, tokenAAmount, tokenBLimit);
+        await xyk.addLiquiditySigned(
+          tokenAId,
+          tokenBId,
+          tokenAAmount,
+          tokenBLimit
+        );
       },
       options
     );
@@ -184,6 +194,10 @@ describe("xyk", () => {
       xyk = appChain.runtime.resolve("XYK");
     });
 
+    afterAll(async () => {
+      await appChain.close();
+    });
+
     it("should create a pool", async () => {
       await drip(appChain, alicePrivateKey, tokenAId, tokenAInitialLiquidity, {
         nonce: nonce++,
@@ -286,6 +300,10 @@ describe("xyk", () => {
       );
     });
 
+    afterAll(async () => {
+      await appChain.close();
+    });
+
     it("should add liquidity to an existing pool", async () => {
       await addLiquiditySigned(
         appChain,
@@ -371,6 +389,10 @@ describe("xyk", () => {
       );
     });
 
+    afterAll(async () => {
+      await appChain.close();
+    });
+
     it("should add liquidity to an existing pool", async () => {
       await removeLiquiditySigned(
         appChain,
@@ -440,6 +462,10 @@ describe("xyk", () => {
         tokenBInitialLiquidity,
         { nonce: nonce++ }
       );
+    });
+
+    afterAll(async () => {
+      await appChain.close();
     });
 
     it("should sell tokens for tokens out", async () => {
