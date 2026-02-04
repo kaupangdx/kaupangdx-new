@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { PrivateKey } from "o1js";
 import { Balance, BalancesKey, TokenId } from "@proto-kit/library";
 import { config, modules } from "../../src/runtime";
