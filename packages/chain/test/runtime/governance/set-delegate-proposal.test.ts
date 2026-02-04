@@ -94,7 +94,7 @@ describe("set delegate proposal", () => {
     const tx = await appChain.transaction(
       senderPrivateKey.toPublicKey(),
       async () => {
-        locks.lockSigned(tokenId, amount, expiresAt);
+        await locks.lockSigned(tokenId, amount, expiresAt);
       },
       options
     );

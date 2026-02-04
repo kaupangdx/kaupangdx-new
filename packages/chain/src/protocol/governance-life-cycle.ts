@@ -1,12 +1,12 @@
 import { Balance, TokenId, UInt64 } from "@proto-kit/library";
 import {
-    AfterTransactionHookArguments,
-    BeforeTransactionHookArguments,
+  AfterTransactionHookArguments,
+  BeforeTransactionHookArguments,
   NetworkState,
   ProvableTransactionHook,
   State,
   StateMap,
-  state
+  state,
 } from "@proto-kit/protocol";
 import { Field, Poseidon, Provable } from "o1js";
 import { inject, injectable } from "tsyringe";
@@ -56,8 +56,7 @@ export interface GovernanceLifecycleBlockHookConfig {
  */
 @injectable()
 export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<GovernanceLifecycleBlockHookConfig> {
-  @state() public currentGovernancePeriod =
-    State.from(GovernancePeriod);
+  @state() public currentGovernancePeriod = State.from(GovernancePeriod);
 
   @state() public currentGovernancePeriodStartedAtBlock =
     State.from(BlockHeight);
@@ -76,18 +75,22 @@ export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<
     this.balances = runtime.resolve("Balances");
   }
 
-  public async beforeTransaction( { networkState } : BeforeTransactionHookArguments) {
-    const currentGovernancePeriod = (await this.currentGovernancePeriod
-      .get())
-      .orElse(GovernancePeriod.from(0));
+  public async beforeTransaction({
+    networkState,
+  }: BeforeTransactionHookArguments) {
+    const currentGovernancePeriod = (
+      await this.currentGovernancePeriod.get()
+    ).orElse(GovernancePeriod.from(0));
 
     const currentGovernancePeriodStartedAtBlock = BlockHeight.Safe.fromField(
-      (await this.currentGovernancePeriodStartedAtBlock
-        .get())
-        .orElse(BlockHeight.from(0)).value
+      (await this.currentGovernancePeriodStartedAtBlock.get()).orElse(
+        BlockHeight.from(0)
+      ).value
     );
 
-    const currentBlockHeight = BlockHeight.Safe.fromField(networkState.block.height.value);
+    const currentBlockHeight = BlockHeight.Safe.fromField(
+      networkState.block.height.value
+    );
 
     /**
      * Calculate the number of blocks that have passed since the start
@@ -143,8 +146,10 @@ export class GovernanceLifecycleTransactionHook extends ProvableTransactionHook<
       totalSupply
     );
   }
-  
-  public async afterTransaction(execution: AfterTransactionHookArguments): Promise<void> {
-      noop();
+
+  public async afterTransaction(
+    execution: AfterTransactionHookArguments
+  ): Promise<void> {
+    noop();
   }
 }
