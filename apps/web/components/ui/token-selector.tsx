@@ -97,7 +97,7 @@ export function TokenSelector({ disabled, name }: TokenSelectorProps) {
                         form.trigger(inputName).then();
                         setOpen(false);
                       }}
-                      className="flex items-center justify-between"
+                      className="flex items-center justify-between hover:cursor-pointer"
                     >
                       <div className="flex items-center">
                         <img

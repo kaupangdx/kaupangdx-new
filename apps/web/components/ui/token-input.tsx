@@ -35,7 +35,7 @@ export function TokenInput({
           disabled={amountInputDisabled}
           placeholder="0"
           className={cn([
-            "mr-4 h-auto border-0  p-0 text-3xl focus-visible:ring-0 focus-visible:ring-offset-0 font-mono",
+            "mr-4 h-auto border-0  p-0 text-2xl focus-visible:ring-0 focus-visible:ring-offset-0 font-mono",
           ])}
         />
         {!tokenInputHidden && (
