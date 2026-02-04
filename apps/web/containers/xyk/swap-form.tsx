@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { addPrecision, removePrecision } from "./add-liquidity-form";
 import BigNumber from "bignumber.js";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useWalletStore } from "@/lib/stores/wallet";
 import { useBalancesStore, useObserveBalance } from "@/lib/stores/balances";
@@ -60,6 +60,8 @@ export function SwapForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       route: [],
+      tokenIn_token: "0", // MINA
+      tokenOut_token: "2", // BTC
     },
     reValidateMode: "onChange",
     mode: "onChange",
@@ -238,6 +240,14 @@ export function SwapForm() {
       setLoading(false);
     }
   };
+  
+    const changeTokens = useCallback(() => {
+    form.reset();
+    form.setValue("tokenOut_token", fields.tokenIn_token);
+    form.setValue("tokenIn_token", fields.tokenOut_token);
+
+    form.clearErrors();
+  }, [fields]);
 
   return (
     <Form {...form}>
@@ -246,6 +256,7 @@ export function SwapForm() {
           unitPrice={unitPrice}
           loading={loading}
           route={fields.route}
+          onChangeTokens={changeTokens}
         />
       </form>
     </Form>

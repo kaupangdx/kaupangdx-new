@@ -89,6 +89,10 @@ export function AddLiquidityForm() {
     resolver: zodResolver(formSchema),
     reValidateMode: "onChange",
     mode: "onChange",
+    defaultValues:{
+      tokenA_token: "0",
+      tokenB_token: "2"
+    }
   });
   const fields = form.getValues();
 

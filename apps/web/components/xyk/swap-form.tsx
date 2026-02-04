@@ -17,9 +17,10 @@ export interface SwapFormProps {
   loading: boolean;
   route: string[];
   unitPrice?: string;
+  onChangeTokens: () => void;
 }
 
-export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
+export function SwapForm({ loading, route, unitPrice, onChangeTokens}: SwapFormProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const form = useFormContext();
   const error = Object.values(form.formState.errors)[0]?.message?.toString();
@@ -44,6 +45,7 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
           <Button
             type={"button"}
             size={"icon"}
+            onClick={onChangeTokens}
             className="group rounded-xl border-4 border-zinc-950 bg-zinc-800 text-foreground hover:bg-zinc-800"
           >
             <ArrowDown className="h-4 w-4 transition-all group-hover:rotate-180" />
@@ -70,7 +72,7 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
       <Collapsible onOpenChange={setDetailsOpen}>
         <div className="mt-4 flex justify-between">
           <div className="flex items-center">
-            <p className={cn("mr-1.5 text-sm font-mono")}>
+            <p className={cn("mr-1.5 text-sm")}>
               {unitPriceWrapped ? (
                 `1 ${unitPriceWrapped.tokenIn} = ${unitPrice} ${unitPriceWrapped.tokenOut}`
               ) : (
