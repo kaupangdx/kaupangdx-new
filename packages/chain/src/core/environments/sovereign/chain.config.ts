@@ -20,11 +20,10 @@ const appChain = AppChain.from({
   Sequencer: Sequencer.from({
     // ordering of the modules matters due to dependency resolution
     ...DefaultModules.prismaRedisDatabase(),
-    ...DefaultModules.metrics(),
-    ...DefaultModules.core({ settlementEnabled }),
+    //...DefaultModules.metrics(),
     ...DefaultModules.redisTaskQueue(),
+    ...DefaultModules.core({ settlementEnabled }),
     ...DefaultModules.sequencerIndexer(),
-    ...(settlementEnabled ? { BridgingModule } : {}),
   }),
   ...DefaultModules.appChainBase(),
 });
@@ -39,7 +38,7 @@ export default async (args: Arguments): Promise<Startable> => {
     Sequencer: {
       ...DefaultConfigs.core({ settlementEnabled, preset: "sovereign" }),
       ...DefaultConfigs.sequencerIndexer(),
-      ...DefaultConfigs.metrics({ preset: "sovereign" }),
+      //...DefaultConfigs.metrics({ preset: "sovereign" }),
       ...DefaultConfigs.redisTaskQueue({ preset: "sovereign" }),
       ...DefaultConfigs.prismaRedisDatabase({
         preset: "sovereign",
