@@ -7,6 +7,7 @@ import * as protocol from "../../../protocol";
 import { Arguments } from "../../../start";
 import { Startable } from "@proto-kit/common";
 import { DefaultConfigs, DefaultModules } from "@proto-kit/stack";
+import { PublicKey } from "o1js";
 
 const settlementEnabled = process.env.PROTOKIT_SETTLEMENT_ENABLED! === "true";
 
@@ -23,6 +24,7 @@ const appChain = AppChain.from({
     ...DefaultModules.core({ settlementEnabled }),
     ...DefaultModules.redisTaskQueue(),
     ...DefaultModules.sequencerIndexer(),
+    BridgingModule
   }),
   ...DefaultModules.appChainBase(),
 });
@@ -43,13 +45,23 @@ export default async (args: Arguments): Promise<Startable> => {
         overrides: {
           redisDb: 1,
         },
-      }),
+      }),      
       ...DefaultConfigs.prismaRedisDatabase({
         preset: "development",
         overrides: {
           pruneOnStartup: args.pruneOnStartup,
         },
       }),
+      BridgingModule: {
+        addresses:{
+          DispatchContract: PublicKey.fromBase58(process.env.PROTOKIT_DISPATCHER_CONTRACT_PUBLIC_KEY!) 
+        }
+      },
+      SettlementModule: {
+        addresses:{
+          SettlementContract: PublicKey.fromBase58(process.env.PROTOKIT_SETTLEMENT_CONTRACT_PUBLIC_KEY!)
+        }
+      },
     },
     ...DefaultConfigs.appChainBase(),
   });
