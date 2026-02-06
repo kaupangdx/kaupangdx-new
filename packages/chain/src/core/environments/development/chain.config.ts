@@ -23,7 +23,6 @@ const appChain = AppChain.from({
     ...DefaultModules.core({ settlementEnabled }),
     ...DefaultModules.redisTaskQueue(),
     ...DefaultModules.sequencerIndexer(),
-    BridgingModule: BridgingModule
   }),
   ...DefaultModules.appChainBase(),
 });
@@ -51,7 +50,6 @@ export default async (args: Arguments): Promise<Startable> => {
           pruneOnStartup: args.pruneOnStartup,
         },
       }),
-      BridgingModule: {}
     },
     ...DefaultConfigs.appChainBase(),
   });
