@@ -7,12 +7,20 @@ export interface AddLiquidityFormProps {
   loading: boolean;
   poolExists: boolean;
   onChangeTokens: () => void;
+  tokenABalance?: string;
+  tokenBBalance?: string;
+  onMaxTokenA?: () => void;
+  onMaxTokenB?: () => void;
 }
 
 export function AddLiquidityForm({
   loading,
   poolExists,
   onChangeTokens,
+  tokenABalance,
+  tokenBBalance,
+  onMaxTokenA,
+  onMaxTokenB,
 }: AddLiquidityFormProps) {
   const form = useFormContext();
   const error = Object.values(form.formState.errors)[0]?.message?.toString();
@@ -21,7 +29,12 @@ export function AddLiquidityForm({
     <>
       <div className="relative grid gap-2">
         <div className="relative grid gap-2">
-          <TokenInput label="Token A" name="tokenA" />
+          <TokenInput
+            label="Token A"
+            name="tokenA"
+            balance={tokenABalance}
+            onMaxClick={onMaxTokenA}
+          />
 
           <div className="absolute left-1/2 top-1/2 -ml-6 -mt-5">
             <Button
@@ -38,6 +51,8 @@ export function AddLiquidityForm({
             label="Token B"
             name="tokenB"
             amountInputDisabled={poolExists}
+            balance={tokenBBalance}
+            onMaxClick={!poolExists ? onMaxTokenB : undefined}
           />
         </div>
         <div>

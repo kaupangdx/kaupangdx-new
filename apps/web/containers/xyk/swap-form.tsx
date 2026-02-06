@@ -7,7 +7,7 @@ import BigNumber from "bignumber.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useWalletStore } from "@/lib/stores/wallet";
-import { useBalancesStore, useObserveBalance } from "@/lib/stores/balances";
+import { useBalance, useBalancesStore, useObserveBalance } from "@/lib/stores/balances";
 import { PoolKey, TokenPair, dijkstra, prepareGraph } from "chain";
 import { pools } from "@/tokens";
 import { TokenId } from "@proto-kit/library";
@@ -69,7 +69,8 @@ export function SwapForm() {
 
   const fields = form.getValues();
   const wallet = useWalletStore();
-  const balance = useObserveBalance(fields.tokenIn_token, wallet.wallet);
+  const tokenInBalance = useBalance(wallet.wallet, fields.tokenIn_token);
+  const tokenOutBalance = useBalance(wallet.wallet, fields.tokenOut_token);
 
   const routerPools = pools.map(([tokenA, tokenB]) => {
     const poolKey = PoolKey.fromTokenPair(
@@ -140,9 +141,17 @@ export function SwapForm() {
   }, [fields.tokenIn_token, fields.tokenOut_token, pool]);
 
   useEffect(() => {
-    walletBalance.current = balance ?? "0";
+    walletBalance.current = tokenInBalance ?? "0";
     form.formState.isDirty && form.trigger("tokenIn_amount");
-  }, [balance, form.formState.isDirty]);
+  }, [tokenInBalance, form.formState.isDirty]);
+
+  const handleMaxTokenIn = useCallback(() => {
+    if (!tokenInBalance) return;
+    form.setValue("tokenIn_amount", removePrecision(tokenInBalance), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }, [tokenInBalance, form]);
 
   const balances = useBalancesStore();
 
@@ -257,6 +266,9 @@ export function SwapForm() {
           loading={loading}
           route={fields.route}
           onChangeTokens={changeTokens}
+          tokenInBalance={tokenInBalance}
+          tokenOutBalance={tokenOutBalance}
+          onMaxTokenIn={handleMaxTokenIn}
         />
       </form>
     </Form>

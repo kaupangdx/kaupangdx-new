@@ -212,6 +212,14 @@ export function RemoveLiquidityForm() {
     form.clearErrors();
   }, [fields]);
 
+  const handleMaxLpToken = useCallback(() => {
+    if (!userTokenLpBalance) return;
+    form.setValue("tokenLP_amount", removePrecision(userTokenLpBalance), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }, [userTokenLpBalance, form]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -219,6 +227,8 @@ export function RemoveLiquidityForm() {
           onChangeTokens={changeTokens}
           poolExists={pool?.exists ?? true}
           loading={loading}
+          lpTokenBalance={userTokenLpBalance}
+          onMaxLpToken={handleMaxLpToken}
         />
       </form>
     </Form>

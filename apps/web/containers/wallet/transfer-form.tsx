@@ -1,9 +1,9 @@
 import { Form } from "@/components/ui/form";
 import { TransferForm as TransferFormComponent } from "@/components/wallet/transfer-form";
-import { useObserveBalance, useTransfer } from "@/lib/stores/balances";
+import { useBalance, useTransfer } from "@/lib/stores/balances";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PublicKey } from "o1js";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { addPrecision, removePrecision } from "../xyk/add-liquidity-form";
@@ -69,12 +69,20 @@ export function TransferForm() {
   const transfer = useTransfer();
   const fields = form.getValues();
   const wallet = useWalletStore();
-  const balance = useObserveBalance(fields.amount_token, wallet.wallet);
+  const balance = useBalance(wallet.wallet, fields.amount_token);
 
   useEffect(() => {
     walletBalance.current = balance ?? "0";
     form.formState.isDirty && form.trigger("amount_amount");
   }, [balance, form.formState.isDirty]);
+
+  const handleMaxClick = useCallback(() => {
+    if (!balance) return;
+    form.setValue("amount_amount", removePrecision(balance), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }, [balance, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
@@ -93,7 +101,7 @@ export function TransferForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <TransferFormComponent loading={false} />
+        <TransferFormComponent loading={loading} balance={balance} onMaxClick={handleMaxClick} />
       </form>
     </Form>
   );

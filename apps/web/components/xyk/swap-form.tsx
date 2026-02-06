@@ -18,9 +18,12 @@ export interface SwapFormProps {
   route: string[];
   unitPrice?: string;
   onChangeTokens: () => void;
+  tokenInBalance?: string;
+  tokenOutBalance?: string;
+  onMaxTokenIn?: () => void;
 }
 
-export function SwapForm({ loading, route, unitPrice, onChangeTokens}: SwapFormProps) {
+export function SwapForm({ loading, route, unitPrice, onChangeTokens, tokenInBalance, tokenOutBalance, onMaxTokenIn }: SwapFormProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const form = useFormContext();
   const error = Object.values(form.formState.errors)[0]?.message?.toString();
@@ -39,7 +42,12 @@ export function SwapForm({ loading, route, unitPrice, onChangeTokens}: SwapFormP
   return (
     <>
       <div className="relative">
-        <TokenInput name="tokenIn" label="You pay" />
+        <TokenInput
+          name="tokenIn"
+          label="You pay"
+          balance={tokenInBalance}
+          onMaxClick={onMaxTokenIn}
+        />
 
         <div className="absolute left-1/2 top-1/2 -ml-6 -mt-5">
           <Button
@@ -57,6 +65,7 @@ export function SwapForm({ loading, route, unitPrice, onChangeTokens}: SwapFormP
             name="tokenOut"
             label="You get"
             amountInputDisabled={true}
+            balance={tokenOutBalance}
           />
         </div>
       </div>

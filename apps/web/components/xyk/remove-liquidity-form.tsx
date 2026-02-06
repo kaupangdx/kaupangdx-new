@@ -9,12 +9,16 @@ export interface RemoveLiquidityFormProps {
   loading: boolean;
   poolExists: boolean;
   onChangeTokens: () => void;
+  lpTokenBalance?: string;
+  onMaxLpToken?: () => void;
 }
 
 export function RemoveLiquidityForm({
   loading,
   poolExists,
   onChangeTokens,
+  lpTokenBalance,
+  onMaxLpToken,
 }: RemoveLiquidityFormProps) {
   const form = useFormContext();
   const error = Object.values(form.formState.errors)[0]?.message?.toString();
@@ -49,6 +53,8 @@ export function RemoveLiquidityForm({
             tokenInputDisabled
             tokenInputHidden={true}
             className="mt-2"
+            balance={lpTokenBalance}
+            onMaxClick={onMaxLpToken}
           />
         </div>
       </div>

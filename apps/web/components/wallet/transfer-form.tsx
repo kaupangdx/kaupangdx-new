@@ -5,9 +5,11 @@ import { AddressInput } from "../ui/address-input";
 
 export interface TransferFormProps {
   loading: boolean;
+  balance?: string;
+  onMaxClick?: () => void;
 }
 
-export function TransferForm({ loading }: TransferFormProps) {
+export function TransferForm({ loading, balance, onMaxClick }: TransferFormProps) {
   const form = useFormContext();
   const error = Object.values(form.formState.errors)[0]?.message?.toString();
 
@@ -15,7 +17,7 @@ export function TransferForm({ loading }: TransferFormProps) {
     <>
       <div className="relative grid gap-2">
         <AddressInput name="to" label="Recipient" />
-        <TokenInput label="Amount" name="amount" />
+        <TokenInput label="Amount" name="amount" balance={balance} onMaxClick={onMaxClick} />
       </div>
       <Button
         loading={loading}
