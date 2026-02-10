@@ -17,7 +17,7 @@ const appChain = AppChain.from({
     ...DefaultModules.core({
       settlementEnabled,
     }),
-    ...DefaultModules.localWorker({ settlementEnabled }),
+    ...DefaultModules.localWorker(),
   }),
   ...DefaultModules.appChainBase(),
 });

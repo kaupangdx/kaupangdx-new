@@ -8,6 +8,7 @@ import { Arguments } from "../../../start";
 import { Startable } from "@proto-kit/common";
 import { DefaultConfigs, DefaultModules } from "@proto-kit/stack";
 import { BridgingModule } from "@proto-kit/sequencer";
+import { PublicKey } from "o1js";
 
 const settlementEnabled = process.env.PROTOKIT_SETTLEMENT_ENABLED! === "true";
 
@@ -46,7 +47,19 @@ export default async (args: Arguments): Promise<Startable> => {
           pruneOnStartup: args.pruneOnStartup,
         },
       }),
-      ...(settlementEnabled ? { BridgingModule: {} } : {}),
+      ...(settlementEnabled ? 
+        { BridgingModule: {
+        addresses:{
+          DispatchContract: PublicKey.fromBase58(process.env.PROTOKIT_DISPATCHER_CONTRACT_PUBLIC_KEY!) 
+        }
+        },
+        SettlementModule: {
+          addresses:{
+            SettlementContract: PublicKey.fromBase58(process.env.PROTOKIT_SETTLEMENT_CONTRACT_PUBLIC_KEY!)
+          }
+        }} : 
+        {}
+      )
     },
     ...DefaultConfigs.appChainBase(),
   });
