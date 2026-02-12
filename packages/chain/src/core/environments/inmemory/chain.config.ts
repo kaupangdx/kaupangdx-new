@@ -7,7 +7,7 @@ import { DefaultConfigs, DefaultModules } from "@proto-kit/stack";
 import protocol from "../../../protocol";
 import runtime from "../../../runtime";
 
-const settlementEnabled = false;
+const settlementEnabled = process.env.PROTOKIT_SETTLEMENT_ENABLED === "true";
 
 const appChain = AppChain.from({
   Runtime: Runtime.from(runtime.modules),
@@ -17,7 +17,7 @@ const appChain = AppChain.from({
     ...DefaultModules.core({
       settlementEnabled,
     }),
-    ...DefaultModules.localWorker(),
+    ...DefaultModules.localWorker({ settlementEnabled }),
   }),
   ...DefaultModules.appChainBase(),
 });
@@ -28,7 +28,6 @@ export default async (): Promise<Startable> => {
     Sequencer: {
       ...DefaultConfigs.core({
         settlementEnabled,
-        preset: "inmemory",
       }),
       ...DefaultConfigs.inMemoryDatabase(),
       ...DefaultConfigs.localWorker(),

@@ -16,7 +16,7 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "test": "node --experimental-vm-modules --experimental-wasm-modules ./node_modules/jest/bin/jest.js",
+    "test": "node --experimental-vm-modules --experimental-wasm-modules --experimental-wasm-threads ./node_modules/jest/bin/jest.js",
     "test:watch": "npm run test --watchAll",
     "build": "pnpm run prisma:generate && tsc -p tsconfig.json",
     "start": "pnpm run sequencer:start",
@@ -56,7 +56,6 @@
     "@proto-kit/sdk": "../../../framework/packages/sdk",
     "@proto-kit/sequencer": "../../../framework/packages/sequencer",
     "@proto-kit/stack": "../../../framework/packages/stack",
-    "@proto-kit/cli": "../../../framework/packages/cli",
     "o1js": "../../../framework/node_modules/o1js",
     "tsyringe": "../../../framework/node_modules/tsyringe"
   },
@@ -94,10 +93,11 @@
   "dependencies": {
     "graphql-fields": "^2.0.3",
     "graphql-scalars": "^1.22.4",
-    "mina-fungible-token": "^1.1.0",
     "mina-lightweight-explorer": "github:o1-labs/mina-lightweight-explorer",
     "reflect-metadata": "^0.1.13",
-    "type-graphql": "2.0.0-rc.2"
+    "type-graphql": "2.0.0-rc.2",
+    "mina-fungible-token": "^1.1.0",
+    "@proto-kit/cli": "../../../framework/packages/cli"
   },
   "nodemonConfig": {
     "delay": 1000

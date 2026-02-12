@@ -37,4 +37,3 @@ services:
     volumes:
       - ${HOME}/.cache/o1js:/home/node/.cache/o1js
     command: ["./dist/start.js start ./core/environments/${PROTOKIT_ENV_FOLDER}/worker.config.js"]
-

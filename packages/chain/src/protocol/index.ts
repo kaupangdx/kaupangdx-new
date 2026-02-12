@@ -22,19 +22,20 @@ export const config: ModulesConfig<typeof modules> = {
   },
 } satisfies ModulesConfig<typeof modules>;
 
-
 export const settlementModules = {
-  SettlementContractModule: SettlementContractModule.from(SettlementContractModule.settlementAndBridging()),
+  SettlementContractModule: SettlementContractModule.from(
+    SettlementContractModule.settlementAndBridging()
+  ),
 } satisfies ProtocolModulesRecord;
 
 
 export const settlementModulesConfig = {
   SettlementContractModule: {
+    BridgeContract: {},
     SettlementContract: {},
     DispatchContract: {
-      incomingMessagesMethods:{}
+      incomingMessagesMethods: {},
     },
-    BridgeContract: {}
   },
 } satisfies ModulesConfig<typeof settlementModules>;
 

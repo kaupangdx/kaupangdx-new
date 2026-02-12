@@ -6,6 +6,11 @@ import { DefaultConfigs, DefaultModules } from "@proto-kit/stack";
 const indexer = Indexer.from(DefaultModules.indexer());
 
 export default async (args: Arguments): Promise<Startable> => {
-  indexer.configurePartial(DefaultConfigs.indexer({ preset: "sovereign" }));
+  indexer.configurePartial({
+    ...DefaultConfigs.indexer({
+      preset: "sovereign",
+      overrides: { redisDb: 1 },
+    }),
+  });
   return indexer;
 };
