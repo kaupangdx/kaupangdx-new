@@ -50,5 +50,24 @@
     "ts-node": "^10.9.2"
   },
   "packageManager": "pnpm@9.8.0+sha256.56a9e76b51796ca7f73b85e44cf83712862091f4d498c0ce4d5b7ecdc6ba18f7",
-  "name": "starter-kit"
+  "name": "starter-kit",
+  "pnpm": {
+    "overrides": {
+      "@proto-kit/api": "link:../framework/packages/api",
+      "@proto-kit/common": "link:../framework/packages/common",
+      "@proto-kit/deployment": "link:../framework/packages/deployment",
+      "@proto-kit/indexer": "link:../framework/packages/indexer",
+      "@proto-kit/library": "link:../framework/packages/library",
+      "@proto-kit/module": "link:../framework/packages/module",
+      "@proto-kit/persistance": "link:../framework/packages/persistance",
+      "@proto-kit/processor": "link:../framework/packages/processor",
+      "@proto-kit/protocol": "link:../framework/packages/protocol",
+      "@proto-kit/sdk": "link:../framework/packages/sdk",
+      "@proto-kit/sequencer": "link:../framework/packages/sequencer",
+      "@proto-kit/stack": "link:../framework/packages/stack",
+      "@proto-kit/cli": "link:../framework/packages/cli",
+      "o1js": "link:../framework/node_modules/o1js",
+      "tsyringe": "link:../framework/node_modules/tsyringe"
+    }
+  }
 }
