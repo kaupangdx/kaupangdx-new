@@ -28,7 +28,6 @@ export const settlementModules = {
   ),
 } satisfies ProtocolModulesRecord;
 
-
 export const settlementModulesConfig = {
   SettlementContractModule: {
     BridgeContract: {},

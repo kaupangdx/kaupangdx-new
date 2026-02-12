@@ -2,7 +2,7 @@
 # FROM node:22
 
 # For locally built and imported framework references
-# Make sure you build the base image first
+# Make sure you build the base-image first
 FROM protokit-base:latest
 
 WORKDIR /app

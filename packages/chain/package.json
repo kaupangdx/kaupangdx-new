@@ -96,8 +96,7 @@
     "mina-lightweight-explorer": "github:o1-labs/mina-lightweight-explorer",
     "reflect-metadata": "^0.1.13",
     "type-graphql": "2.0.0-rc.2",
-    "mina-fungible-token": "^1.1.0",
-    "@proto-kit/cli": "../../../framework/packages/cli"
+    "mina-fungible-token": "^1.1.0"
   },
   "nodemonConfig": {
     "delay": 1000

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "predev": "cd ../../packages/chain && pnpm build",
-    "build": "next build --no-lint", 
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -41,7 +41,7 @@
     "tailwindcss-animate": "^1.0.7",
     "truncate-middle": "^1.0.6",
     "vaul": "^1.1.2",
-    "zod": "^3.22.4",
+"zod": "^3.22.4",
     "zustand": "^4.4.6"
   },
   "devDependencies": {
@@ -56,19 +56,19 @@
     "postcss": "^8",
     "prettier-plugin-tailwindcss": "^0.5.6",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5.1"
+    "typescript": "^5.4.5"
   },
   "peerDependencies": {
     "@proto-kit/api": "../../../framework/packages/api",
     "@proto-kit/common": "../../../framework/packages/common",
     "@proto-kit/deployment": "../../../framework/packages/deployment",
-    "@proto-kit/indexer": "../../../framework/packages/indexer",
     "@proto-kit/library": "../../../framework/packages/library",
     "@proto-kit/module": "../../../framework/packages/module",
     "@proto-kit/persistance": "../../../framework/packages/persistance",
     "@proto-kit/protocol": "../../../framework/packages/protocol",
     "@proto-kit/sdk": "../../../framework/packages/sdk",
     "@proto-kit/sequencer": "../../../framework/packages/sequencer",
+    "@proto-kit/indexer": "../../../framework/packages/indexer",
     "o1js": "../../../framework/node_modules/o1js",
     "tsyringe": "../../../framework/node_modules/tsyringe"
   }

@@ -14,7 +14,7 @@ export default async (args: Arguments): Promise<Startable> => {
       overrides: {
         pruneOnStartup: args.pruneOnStartup,
         redisDb: 1,
-      }
+      },
     }),
   });
   return indexer;
