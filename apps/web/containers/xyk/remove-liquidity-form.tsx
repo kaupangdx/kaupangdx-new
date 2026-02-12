@@ -5,17 +5,12 @@ import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  useAddLiquidity,
-  useCreatePool,
   useObservePool,
-  usePool,
   useRemoveLiquidity,
 } from "@/lib/stores/xyk";
 import BigNumber from "bignumber.js";
-import { LPTokenId, PoolKey, TokenPair } from "chain";
-import { TokenId } from "@proto-kit/library";
+import { LPTokenId} from "chain";
 import {
-  useBalancesStore,
   useObserveBalance,
   useObserveTotalSupply,
 } from "@/lib/stores/balances";
@@ -85,6 +80,10 @@ export function RemoveLiquidityForm() {
     resolver: zodResolver(formSchema),
     reValidateMode: "onChange",
     mode: "onChange",
+    defaultValues:{
+      tokenA_token: "0",
+      tokenB_token: "2"
+    }
   });
   const fields = form.getValues();
 
@@ -213,6 +212,14 @@ export function RemoveLiquidityForm() {
     form.clearErrors();
   }, [fields]);
 
+  const handleMaxLpToken = useCallback(() => {
+    if (!userTokenLpBalance) return;
+    form.setValue("tokenLP_amount", removePrecision(userTokenLpBalance), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }, [userTokenLpBalance, form]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -220,6 +227,8 @@ export function RemoveLiquidityForm() {
           onChangeTokens={changeTokens}
           poolExists={pool?.exists ?? true}
           loading={loading}
+          lpTokenBalance={userTokenLpBalance}
+          onMaxLpToken={handleMaxLpToken}
         />
       </form>
     </Form>

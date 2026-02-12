@@ -1,20 +1,18 @@
 import { Form } from "@/components/ui/form";
 import { AddLiquidityForm as AddLiquidityFormComponent } from "@/components/xyk/add-liquidity-form";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useAddLiquidity,
   useCreatePool,
   useObservePool,
-  usePool,
 } from "@/lib/stores/xyk";
 import BigNumber from "bignumber.js";
-import { LPTokenId, PoolKey, TokenPair } from "chain";
-import { TokenId } from "@proto-kit/library";
+import { LPTokenId } from "chain";
 import {
-  useBalancesStore,
+  useBalance,
   useObserveBalance,
   useObserveTotalSupply,
 } from "@/lib/stores/balances";
@@ -92,6 +90,10 @@ export function AddLiquidityForm() {
     resolver: zodResolver(formSchema),
     reValidateMode: "onChange",
     mode: "onChange",
+    defaultValues:{
+      tokenA_token: "0",
+      tokenB_token: "2"
+    }
   });
   const fields = form.getValues();
 
@@ -104,8 +106,8 @@ export function AddLiquidityForm() {
   // observe balances of the pool & the connected wallet
   const tokenAReserve = useObserveBalance(fields.tokenA_token, poolKey);
   const tokenBReserve = useObserveBalance(fields.tokenB_token, poolKey);
-  const userTokenABalance = useObserveBalance(fields.tokenA_token, wallet);
-  const userTokenBBalance = useObserveBalance(fields.tokenB_token, wallet);
+  const userTokenABalance = useBalance(wallet, fields.tokenA_token);
+  const userTokenBBalance = useBalance(wallet, fields.tokenB_token);
 
   useEffect(() => {
     if (!userTokenABalance || !userTokenBBalance) return;
@@ -211,6 +213,22 @@ export function AddLiquidityForm() {
     form.clearErrors();
   }, [fields]);
 
+  const handleMaxTokenA = useCallback(() => {
+    if (!userTokenABalance) return;
+    form.setValue("tokenA_amount", removePrecision(userTokenABalance), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }, [userTokenABalance, form]);
+
+  const handleMaxTokenB = useCallback(() => {
+    if (!userTokenBBalance) return;
+    form.setValue("tokenB_amount", removePrecision(userTokenBBalance), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }, [userTokenBBalance, form]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -218,6 +236,10 @@ export function AddLiquidityForm() {
           onChangeTokens={changeTokens}
           poolExists={pool?.exists ?? true}
           loading={loading}
+          tokenABalance={userTokenABalance}
+          tokenBBalance={userTokenBBalance}
+          onMaxTokenA={handleMaxTokenA}
+          onMaxTokenB={handleMaxTokenB}
         />
       </form>
     </Form>

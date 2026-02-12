@@ -2,17 +2,17 @@ import {
   RuntimeModule,
   runtimeMethod,
   runtimeModule,
-  state,
+
 } from "@proto-kit/module";
-import { StateMap, assert } from "@proto-kit/protocol";
-import { PoolKey } from "./pool-key";
-import { Provable, PublicKey, Struct, UInt64 as O1UInt64, Bool } from "o1js";
+import { StateMap, assert, state } from "@proto-kit/protocol";
+import { Provable, PublicKey, Struct, Bool } from "o1js";
 import { inject } from "tsyringe";
 import { Balance, TokenId, UInt64 } from "@proto-kit/library";
 import { TokenPair } from "./token-pair";
 import { LPTokenId } from "./lp-token-id";
-import { MAX_TOKEN_ID, TokenRegistry } from "../token-registry";
-import { Balances } from "../balances";
+import { MAX_TOKEN_ID, TokenRegistry } from "../modules/token-registry"
+import { Balances } from "../modules/balances";
+import { PoolKey } from "./pool-key";
 
 export const errors = {
   tokensNotDistinct: () => `Tokens must be different`,
@@ -62,8 +62,8 @@ export class XYK extends RuntimeModule<XYKConfig> {
     super();
   }
 
-  public poolExists(poolKey: PoolKey) {
-    return this.pools.get(poolKey).isSome;
+  public async poolExists(poolKey: PoolKey) {
+    return (await this.pools.get(poolKey)).isSome;
   }
 
   /**
@@ -76,7 +76,7 @@ export class XYK extends RuntimeModule<XYKConfig> {
    * @param tokenASupply
    * @param tokenBSupply
    */
-  public createPool(
+  public async createPool(
     creator: PublicKey,
     tokenAId: TokenId,
     tokenBId: TokenId,
@@ -86,19 +86,19 @@ export class XYK extends RuntimeModule<XYKConfig> {
     const tokenPair = TokenPair.from(tokenAId, tokenBId);
     const poolKey = PoolKey.fromTokenPair(tokenPair);
     const areTokensDistinct = tokenAId.equals(tokenBId).not();
-    const poolDoesNotExist = this.poolExists(poolKey).not();
+    const poolDoesNotExist = (await this.poolExists(poolKey)).not();
 
     // TODO: add check for minimal liquidity in pools
     assert(areTokensDistinct, errors.tokensNotDistinct());
     assert(poolDoesNotExist, errors.poolAlreadyExists());
 
     // transfer liquidity from the creator to the pool
-    this.balances.transfer(tokenAId, creator, poolKey, tokenAAmount);
-    this.balances.transfer(tokenBId, creator, poolKey, tokenBAmount);
+    await this.balances.transfer(tokenAId, creator, poolKey, tokenAAmount);
+    await this.balances.transfer(tokenBId, creator, poolKey, tokenBAmount);
 
     // determine initial LP token supply
     const lpTokenId = LPTokenId.fromTokenPair(tokenPair);
-    const initialLPTokenSupply = Balance.from(
+    const initialLPTokenSupply = Balance.Safe.fromField(
       // if tokenA supply is greater than tokenB supply, use tokenA supply, otherwise use tokenB supply
       Provable.if(
         tokenAId.greaterThan(tokenBId),
@@ -108,13 +108,13 @@ export class XYK extends RuntimeModule<XYKConfig> {
       ).value
     );
 
-    this.tokenRegistry.addTokenId(lpTokenId);
-    this.balances.mintAndIncrementSupply(
+    await this.tokenRegistry.addTokenId(lpTokenId);
+    await this.balances.mintAndIncrementSupply(
       lpTokenId,
       creator,
       initialLPTokenSupply
     );
-    this.pools.set(poolKey, placeholderPoolValue);
+    await this.pools.set(poolKey, placeholderPoolValue);
   }
 
   /**
@@ -127,7 +127,7 @@ export class XYK extends RuntimeModule<XYKConfig> {
    * @param amountA
    * @param amountBLimit
    */
-  public addLiquidity(
+  public async addLiquidity(
     provider: PublicKey,
     tokenAId: TokenId,
     tokenBId: TokenId,
@@ -138,13 +138,13 @@ export class XYK extends RuntimeModule<XYKConfig> {
     // tokenAId = tokenPair.tokenAId;
     // tokenBId = tokenPair.tokenBId;
     const poolKey = PoolKey.fromTokenPair(tokenPair);
-    const poolDoesExists = this.poolExists(poolKey);
+    const poolDoesExists = await this.poolExists(poolKey);
     const amountANotZero = tokenAAmount.greaterThan(Balance.from(0));
 
-    const reserveA = this.balances.getBalance(tokenAId, poolKey);
-    const reserveB = this.balances.getBalance(tokenBId, poolKey);
+    const reserveA = await this.balances.getBalance(tokenAId, poolKey);
+    const reserveB = await this.balances.getBalance(tokenBId, poolKey);
     const reserveANotZero = reserveA.greaterThan(Balance.from(0));
-    const adjustedReserveA = Balance.from(
+    const adjustedReserveA = Balance.Safe.fromField(
       Provable.if(reserveANotZero, reserveA.value, Balance.from(1).value)
     );
 
@@ -156,7 +156,7 @@ export class XYK extends RuntimeModule<XYKConfig> {
       tokenBAmountLimit.greaterThanOrEqual(amountB);
 
     const lpTokenId = LPTokenId.fromTokenPair(tokenPair);
-    const lpTokenTotalSupply = this.balances.getTotalSupply(lpTokenId);
+    const lpTokenTotalSupply = await this.balances.getTotalSupply(lpTokenId);
 
     // TODO: ensure tokens are provided in the right order, not just ordered by the TokenPair
     // otherwise the inputs for the following math will be in the wrong order
@@ -169,12 +169,12 @@ export class XYK extends RuntimeModule<XYKConfig> {
     assert(reserveANotZero, errors.reserveAIsZero());
     assert(isAmountBLimitSufficient, errors.amountBLimitInsufficient());
 
-    this.balances.transfer(tokenAId, provider, poolKey, tokenAAmount);
-    this.balances.transfer(tokenBId, provider, poolKey, amountB);
-    this.balances.mintAndIncrementSupply(lpTokenId, provider, lpTokensToMint);
+    await this.balances.transfer(tokenAId, provider, poolKey, tokenAAmount);
+    await this.balances.transfer(tokenBId, provider, poolKey, amountB);
+    await this.balances.mintAndIncrementSupply(lpTokenId, provider, lpTokensToMint);
   }
 
-  public removeLiquidity(
+  public async removeLiquidity(
     provider: PublicKey,
     tokenAId: TokenId,
     tokenBId: TokenId,
@@ -187,19 +187,19 @@ export class XYK extends RuntimeModule<XYKConfig> {
     tokenAId = tokenPair.tokenAId;
     tokenBId = tokenPair.tokenBId;
     const poolKey = PoolKey.fromTokenPair(tokenPair);
-    const poolDoesExists = this.poolExists(poolKey);
+    const poolDoesExists = await this.poolExists(poolKey);
     const lpTokenId = LPTokenId.fromTokenPair(tokenPair);
-    const lpTokenTotalSupply = this.balances.getTotalSupply(lpTokenId);
+    const lpTokenTotalSupply = await this.balances.getTotalSupply(lpTokenId);
     const lpTokenTotalSupplyIsZero = lpTokenTotalSupply.equals(Balance.from(0));
-    const adjustedLpTokenTotalSupply = Balance.from(
+    const adjustedLpTokenTotalSupply = Balance.Safe.fromField(
       Provable.if(
         lpTokenTotalSupplyIsZero,
         Balance.from(1).value,
         lpTokenTotalSupply.value
       )
     );
-    const reserveA = this.balances.getBalance(tokenAId, poolKey);
-    const reserveB = this.balances.getBalance(tokenBId, poolKey);
+    const reserveA = await this.balances.getBalance(tokenAId, poolKey);
+    const reserveB = await this.balances.getBalance(tokenBId, poolKey);
 
     const tokenAAmount = Balance.from(lpTokenAmount)
       .mul(reserveA)
@@ -225,12 +225,12 @@ export class XYK extends RuntimeModule<XYKConfig> {
     assert(isTokenAAmountLimitSufficient, errors.amountALimitInsufficient());
     assert(isTokenBAmountLimitSufficient, errors.amountBLimitInsufficient());
 
-    this.balances.transfer(tokenAId, poolKey, provider, tokenAAmount);
-    this.balances.transfer(tokenBId, poolKey, provider, tokenBAmount);
-    this.balances.burnAndDecrementSupply(lpTokenId, provider, lpTokenAmount);
+    await this.balances.transfer(tokenAId, poolKey, provider, tokenAAmount);
+    await this.balances.transfer(tokenBId, poolKey, provider, tokenBAmount);
+    await this.balances.burnAndDecrementSupply(lpTokenId, provider, lpTokenAmount);
   }
 
-  public calculateTokenOutAmountFromReserves(
+  public async calculateTokenOutAmountFromReserves(
     reserveIn: Balance,
     reserveOut: Balance,
     amountIn: Balance
@@ -239,7 +239,7 @@ export class XYK extends RuntimeModule<XYKConfig> {
     const denominator = reserveIn.add(amountIn);
 
     // TODO: extract to safemath
-    const adjustedDenominator = Balance.from(
+    const adjustedDenominator = Balance.Safe.fromField(
       Provable.if(denominator.equals(0), Balance, Balance.from(1), denominator)
         .value
     );
@@ -249,7 +249,7 @@ export class XYK extends RuntimeModule<XYKConfig> {
     return numerator.div(adjustedDenominator);
   }
 
-  public calculateTokenOutAmount(
+  public async calculateTokenOutAmount(
     tokenIn: TokenId,
     tokenOut: TokenId,
     amountIn: Balance
@@ -257,17 +257,17 @@ export class XYK extends RuntimeModule<XYKConfig> {
     const tokenPair = TokenPair.from(tokenIn, tokenOut);
     const pool = PoolKey.fromTokenPair(tokenPair);
 
-    const reserveIn = this.balances.getBalance(tokenIn, pool);
-    const reserveOut = this.balances.getBalance(tokenOut, pool);
+    const reserveIn = await this.balances.getBalance(tokenIn, pool);
+    const reserveOut = await this.balances.getBalance(tokenOut, pool);
 
-    return this.calculateTokenOutAmountFromReserves(
+    return await this.calculateTokenOutAmountFromReserves(
       reserveIn,
       reserveOut,
       amountIn
     );
   }
 
-  public calculateAmountIn(
+  public async calculateAmountIn(
     tokenIn: TokenId,
     tokenOut: TokenId,
     amountOut: Balance
@@ -275,13 +275,13 @@ export class XYK extends RuntimeModule<XYKConfig> {
     const tokenPair = TokenPair.from(tokenIn, tokenOut);
     const pool = PoolKey.fromTokenPair(tokenPair);
 
-    const reserveIn = this.balances.getBalance(tokenIn, pool);
-    const reserveOut = this.balances.getBalance(tokenOut, pool);
+    const reserveIn = await this.balances.getBalance(tokenIn, pool);
+    const reserveOut = await this.balances.getBalance(tokenOut, pool);
 
-    return this.calculateAmountInFromReserves(reserveIn, reserveOut, amountOut);
+    return await this.calculateAmountInFromReserves(reserveIn, reserveOut, amountOut);
   }
 
-  public calculateAmountInFromReserves(
+  public async calculateAmountInFromReserves(
     reserveIn: Balance,
     reserveOut: Balance,
     amountOut: Balance
@@ -290,7 +290,7 @@ export class XYK extends RuntimeModule<XYKConfig> {
     const denominator = reserveOut.sub(amountOut);
 
     // TODO: extract to safemath
-    const adjustedDenominator = Balance.from(
+    const adjustedDenominator = Balance.Safe.fromField(
       Provable.if(denominator.equals(0), Balance, Balance.from(1), denominator)
         .value
     );
@@ -300,7 +300,7 @@ export class XYK extends RuntimeModule<XYKConfig> {
     return numerator.div(adjustedDenominator);
   }
 
-  public sellPath(
+  public async sellPath(
     seller: PublicKey,
     { path }: TokenIdPath,
     amountIn: Balance,
@@ -308,7 +308,7 @@ export class XYK extends RuntimeModule<XYKConfig> {
   ) {
     const initialTokenPair = TokenPair.from(path[0], path[1]);
     const initialPoolKey = PoolKey.fromTokenPair(initialTokenPair);
-    const pathBeginswWithExistingPool = this.poolExists(initialPoolKey);
+    const pathBeginswWithExistingPool = await this.poolExists(initialPoolKey);
 
     assert(pathBeginswWithExistingPool, errors.poolDoesNotExist());
 
@@ -326,9 +326,9 @@ export class XYK extends RuntimeModule<XYKConfig> {
 
       const tokenPair = TokenPair.from(tokenIn, tokenOut);
       const poolKey = PoolKey.fromTokenPair(tokenPair);
-      const poolExists = this.poolExists(poolKey);
+      const poolExists = await this.poolExists(poolKey);
 
-      const calculatedAmountOut = this.calculateTokenOutAmount(
+      const calculatedAmountOut = await this.calculateTokenOutAmount(
         tokenIn,
         tokenOut,
         Balance.from(amountIn)
@@ -342,15 +342,15 @@ export class XYK extends RuntimeModule<XYKConfig> {
 
       lastPoolKey = Provable.if(poolExists, PoolKey, poolKey, lastPoolKey);
 
-      amountOut = Balance.from(
+      amountOut = Balance.Safe.fromField(
         Provable.if(poolExists, Balance, amoutOutWithoutFee, amountOut).value
       );
 
-      amountIn = UInt64.from(
+      amountIn = UInt64.Safe.fromField(
         Provable.if(poolExists, Balance, amountIn, Balance.zero).value
       );
 
-      this.balances.transfer(tokenIn, sender, lastPoolKey, amountIn);
+      await this.balances.transfer(tokenIn, sender, lastPoolKey, amountIn);
 
       sender = lastPoolKey;
       amountIn = amountOut;
@@ -361,29 +361,29 @@ export class XYK extends RuntimeModule<XYKConfig> {
 
     assert(isAmountOutMinLimitSufficient, errors.amountOutIsInsufficient());
 
-    this.balances.transfer(lastTokenOut, lastPoolKey, seller, amountOut);
+    await this.balances.transfer(lastTokenOut, lastPoolKey, seller, amountOut);
   }
 
   @runtimeMethod()
-  public createPoolSigned(
+  public async createPoolSigned(
     tokenAId: TokenId,
     tokenBId: TokenId,
     tokenAAmount: Balance,
     tokenBAmount: Balance
   ) {
     const creator = this.transaction.sender.value;
-    this.createPool(creator, tokenAId, tokenBId, tokenAAmount, tokenBAmount);
+    await this.createPool(creator, tokenAId, tokenBId, tokenAAmount, tokenBAmount);
   }
 
   @runtimeMethod()
-  public addLiquiditySigned(
+  public async addLiquiditySigned(
     tokenAId: TokenId,
     tokenBId: TokenId,
     tokenAAmount: Balance,
     tokenBAmountLimit: Balance
   ) {
     const provider = this.transaction.sender.value;
-    this.addLiquidity(
+    await this.addLiquidity(
       provider,
       tokenAId,
       tokenBId,
@@ -393,7 +393,7 @@ export class XYK extends RuntimeModule<XYKConfig> {
   }
 
   @runtimeMethod()
-  public removeLiquiditySigned(
+  public async removeLiquiditySigned(
     tokenAId: TokenId,
     tokenBId: TokenId,
     lpTokenAmount: Balance,
@@ -401,7 +401,7 @@ export class XYK extends RuntimeModule<XYKConfig> {
     tokenBLAmountLimit: Balance
   ) {
     const provider = this.transaction.sender.value;
-    this.removeLiquidity(
+    await this.removeLiquidity(
       provider,
       tokenAId,
       tokenBId,
@@ -412,12 +412,12 @@ export class XYK extends RuntimeModule<XYKConfig> {
   }
 
   @runtimeMethod()
-  public sellPathSigned(
+  public async sellPathSigned(
     path: TokenIdPath,
     amountIn: Balance,
     amountOutMinLimit: Balance
   ) {
-    this.sellPath(
+    await this.sellPath(
       this.transaction.sender.value,
       path,
       amountIn,

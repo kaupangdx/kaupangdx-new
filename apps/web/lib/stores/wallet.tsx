@@ -9,7 +9,7 @@ import truncateMiddle from "truncate-middle";
 import { usePrevious } from "@uidotdev/usehooks";
 import { useClientStore } from "./client";
 import { useChainStore } from "./chain";
-import { Bool, Field, PublicKey, Signature, UInt64 } from "o1js";
+import { Field, PublicKey, Signature, UInt64 } from "o1js";
 
 export interface WalletState {
   wallet?: string;
@@ -149,7 +149,7 @@ export const useNotifyTransactions = () => {
             isMessage: false,
             sender: PublicKey.fromBase58(tx.sender),
             argsFields: tx.argsFields.map((arg) => Field(arg)),
-            argsJSON: tx.argsJSON,
+            auxiliaryData: [],
             signature: Signature.fromJSON({
               r: tx.signature.r,
               s: tx.signature.s,

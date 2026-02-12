@@ -8,7 +8,7 @@ import { KaupangTestingAppChain, drip } from "../../helpers";
 import { PoolKey } from "../../../src/runtime/xyk/pool-key";
 import { TokenPair } from "../../../src/runtime/xyk/token-pair";
 import { LPTokenId } from "../../../src/runtime/xyk/lp-token-id";
-import { MAX_TOKEN_ID } from "../../../src/runtime/token-registry";
+import { MAX_TOKEN_ID } from "../../../src/runtime/modules/token-registry";
 
 describe("xyk", () => {
   const alicePrivateKey = PrivateKey.random();
@@ -40,8 +40,13 @@ describe("xyk", () => {
 
     const tx = await appChain.transaction(
       senderPrivateKey.toPublicKey(),
-      () => {
-        xyk.createPoolSigned(tokenAId, tokenBId, tokenAAmount, tokenBAmount);
+      async () => {
+        await xyk.createPoolSigned(
+          tokenAId,
+          tokenBId,
+          tokenAAmount,
+          tokenBAmount
+        );
       },
       options
     );
@@ -66,8 +71,13 @@ describe("xyk", () => {
 
     const tx = await appChain.transaction(
       senderPrivateKey.toPublicKey(),
-      () => {
-        xyk.addLiquiditySigned(tokenAId, tokenBId, tokenAAmount, tokenBLimit);
+      async () => {
+        await xyk.addLiquiditySigned(
+          tokenAId,
+          tokenBId,
+          tokenAAmount,
+          tokenBLimit
+        );
       },
       options
     );
@@ -93,8 +103,8 @@ describe("xyk", () => {
 
     const tx = await appChain.transaction(
       senderPrivateKey.toPublicKey(),
-      () => {
-        xyk.removeLiquiditySigned(
+      async () => {
+        await xyk.removeLiquiditySigned(
           tokenAId,
           tokenBId,
           lpTokenAmount,
@@ -124,8 +134,8 @@ describe("xyk", () => {
 
     const tx = await appChain.transaction(
       senderPrivateKey.toPublicKey(),
-      () => {
-        xyk.sellPathSigned(path, amountIn, amountOutMinLimit);
+      async () => {
+        await xyk.sellPathSigned(path, amountIn, amountOutMinLimit);
       },
       options
     );
@@ -182,6 +192,10 @@ describe("xyk", () => {
       appChain.setSigner(alicePrivateKey);
 
       xyk = appChain.runtime.resolve("XYK");
+    });
+
+    afterAll(async () => {
+      await appChain.close();
     });
 
     it("should create a pool", async () => {
@@ -286,6 +300,10 @@ describe("xyk", () => {
       );
     });
 
+    afterAll(async () => {
+      await appChain.close();
+    });
+
     it("should add liquidity to an existing pool", async () => {
       await addLiquiditySigned(
         appChain,
@@ -371,6 +389,10 @@ describe("xyk", () => {
       );
     });
 
+    afterAll(async () => {
+      await appChain.close();
+    });
+
     it("should add liquidity to an existing pool", async () => {
       await removeLiquiditySigned(
         appChain,
@@ -440,6 +462,10 @@ describe("xyk", () => {
         tokenBInitialLiquidity,
         { nonce: nonce++ }
       );
+    });
+
+    afterAll(async () => {
+      await appChain.close();
     });
 
     it("should sell tokens for tokens out", async () => {

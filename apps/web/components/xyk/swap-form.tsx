@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/collapsible";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { GeistMono } from "geist/font/mono";
 import { USDBalance } from "../ui/usd-balance";
 import { useFormContext } from "react-hook-form";
 import { tokens } from "@/tokens";
@@ -18,9 +17,13 @@ export interface SwapFormProps {
   loading: boolean;
   route: string[];
   unitPrice?: string;
+  onChangeTokens: () => void;
+  tokenInBalance?: string;
+  tokenOutBalance?: string;
+  onMaxTokenIn?: () => void;
 }
 
-export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
+export function SwapForm({ loading, route, unitPrice, onChangeTokens, tokenInBalance, tokenOutBalance, onMaxTokenIn }: SwapFormProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const form = useFormContext();
   const error = Object.values(form.formState.errors)[0]?.message?.toString();
@@ -39,12 +42,18 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
   return (
     <>
       <div className="relative">
-        <TokenInput name="tokenIn" label="You pay" />
+        <TokenInput
+          name="tokenIn"
+          label="You pay"
+          balance={tokenInBalance}
+          onMaxClick={onMaxTokenIn}
+        />
 
         <div className="absolute left-1/2 top-1/2 -ml-6 -mt-5">
           <Button
             type={"button"}
             size={"icon"}
+            onClick={onChangeTokens}
             className="group rounded-xl border-4 border-zinc-950 bg-zinc-800 text-foreground hover:bg-zinc-800"
           >
             <ArrowDown className="h-4 w-4 transition-all group-hover:rotate-180" />
@@ -56,6 +65,7 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
             name="tokenOut"
             label="You get"
             amountInputDisabled={true}
+            balance={tokenOutBalance}
           />
         </div>
       </div>
@@ -71,7 +81,7 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
       <Collapsible onOpenChange={setDetailsOpen}>
         <div className="mt-4 flex justify-between">
           <div className="flex items-center">
-            <p className={cn("mr-1.5 text-sm", GeistMono.className)}>
+            <p className={cn("mr-1.5 text-sm")}>
               {unitPriceWrapped ? (
                 `1 ${unitPriceWrapped.tokenIn} = ${unitPrice} ${unitPriceWrapped.tokenOut}`
               ) : (
@@ -81,8 +91,7 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
             {unitPriceWrapped && (
               <p
                 className={cn(
-                  "text-sm text-muted-foreground",
-                  GeistMono.className,
+                  "text-sm text-muted-foreground font-mono",
                 )}
               >
                 (<USDBalance />)
@@ -122,23 +131,6 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
               )}
             </div>
           </div>
-          {/* <div className="flex justify-between text-sm">
-            <p className="text-muted-foreground">Spot price</p>
-            <div className="flex">
-              <p className={cn(GeistMono.className)}>1 MINA = 0.8 DAI</p>
-              <p
-                className={
-                  (cn(GeistMono.className), "pl-1.5 text-muted-foreground")
-                }
-              >
-                (<USDBalance />)
-              </p>
-            </div>
-          </div> */}
-          {/* <div className="flex justify-between text-sm">
-            <p className="text-muted-foreground">Network cost</p>
-            <div>🎉 Free</div>
-          </div> */}
         </CollapsibleContent>
       </Collapsible>
     </>

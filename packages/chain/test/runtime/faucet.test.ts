@@ -1,7 +1,8 @@
+import "reflect-metadata";
 import { PrivateKey } from "o1js";
 import { Balance, BalancesKey, TokenId } from "@proto-kit/library";
 import { config, modules } from "../../src/runtime";
-import { Faucet } from "../../src/runtime/faucet";
+import { Faucet } from "../../src/runtime/modules/faucet";
 import { fromRuntime } from "../testing-appchain";
 
 describe("faucet", () => {
@@ -26,9 +27,13 @@ describe("faucet", () => {
     faucet = appChain.runtime.resolve("Faucet");
   });
 
+  afterAll(async () => {
+    await appChain.close();
+  });
+
   it("should drip tokens", async () => {
-    const tx = await appChain.transaction(alice, () => {
-      faucet.dripSigned(tokenId, balanceToDrip);
+    const tx = await appChain.transaction(alice, async () => {
+      await faucet.dripSigned(tokenId, balanceToDrip);
     });
 
     await tx.sign();

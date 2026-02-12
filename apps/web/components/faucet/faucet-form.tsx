@@ -4,7 +4,7 @@ import { TokenInput } from "../ui/token-input";
 export function FaucetForm() {
   return (
     <div className="relative">
-      <TokenInput label="Test tokens" />
+      <TokenInput label="Test tokens" name="faucet" />
       <Button className="mt-4 h-12 w-full rounded-lg px-10 text-lg">
         Drip
       </Button>

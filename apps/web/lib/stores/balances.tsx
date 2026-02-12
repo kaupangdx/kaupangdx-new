@@ -3,8 +3,8 @@ import { Client, useClientStore } from "./client";
 import { immer } from "zustand/middleware/immer";
 import { PendingTransaction, UnsignedTransaction } from "@proto-kit/sequencer";
 import { Balance, BalancesKey, TokenId } from "@proto-kit/library";
-import { PublicKey } from "o1js";
 import { useCallback, useEffect, useMemo } from "react";
+import { PublicKey, TokenId as O1JSTokenId } from "o1js";
 import { useChainStore } from "./chain";
 import { useWalletStore } from "./wallet";
 
@@ -46,7 +46,7 @@ export function isPendingTransaction(
     throw new Error("Transaction is not a PendingTransaction");
 }
 
-export const tokenId = TokenId.from(0);
+export const tokenId = TokenId.from(O1JSTokenId.default);
 
 export const useBalancesStore = create<
   BalancesState,
@@ -109,8 +109,8 @@ export const useBalancesStore = create<
       const faucet = client.runtime.resolve("Faucet");
       const sender = PublicKey.fromBase58(address);
 
-      const tx = await client.transaction(sender, () => {
-        faucet.dripBundle();
+      const tx = await client.transaction(sender, async () => {
+        await faucet.dripBundle();
       });
 
       await tx.sign();
@@ -129,8 +129,8 @@ export const useBalancesStore = create<
       const balances = client.runtime.resolve("Balances");
       const sender = PublicKey.fromBase58(address);
 
-      const tx = await client.transaction(sender, () => {
-        balances.transferSigned(
+      const tx = await client.transaction(sender, async () => {
+        await balances.transferSigned(
           TokenId.from(tokenId),
           sender,
           PublicKey.fromBase58(recipient),

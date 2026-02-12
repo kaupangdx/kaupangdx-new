@@ -8,7 +8,7 @@ import {
   LockId,
   LockKey,
   Locks,
-} from "../../../src/runtime/locks";
+} from "../../../src/runtime/modules/locks";
 import { drip } from "../../helpers";
 import {
   Proposal,
@@ -41,6 +41,10 @@ describe("set delegate proposal", () => {
 
     locks = appChain.runtime.resolve("Locks");
     setDelegateProposal = appChain.runtime.resolve("SetDelegateProposal");
+  });
+
+  afterAll(async () => {
+    await appChain.close();
   });
 
   async function queryLock(
@@ -89,8 +93,8 @@ describe("set delegate proposal", () => {
     appChain.setSigner(senderPrivateKey);
     const tx = await appChain.transaction(
       senderPrivateKey.toPublicKey(),
-      () => {
-        locks.lockSigned(tokenId, amount, expiresAt);
+      async () => {
+        await locks.lockSigned(tokenId, amount, expiresAt);
       },
       options
     );
@@ -126,8 +130,8 @@ describe("set delegate proposal", () => {
 
       const tx = await appChain.transaction(
         alice,
-        () => {
-          setDelegateProposal.proposeSigned(delegate, lockKey);
+        async () => {
+          await setDelegateProposal.proposeSigned(delegate, lockKey);
         },
         {
           nonce: nonce++,
@@ -164,8 +168,8 @@ describe("set delegate proposal", () => {
 
       const tx = await appChain.transaction(
         alice,
-        () => {
-          setDelegateProposal.voteSigned(
+        async () => {
+          await setDelegateProposal.voteSigned(
             ProposalId.from(1),
             lockKey,
             Bool(true)
@@ -186,8 +190,8 @@ describe("set delegate proposal", () => {
     it("should execute an existing proposal", async () => {
       const tx = await appChain.transaction(
         alice,
-        () => {
-          setDelegateProposal.execute(ProposalId.from(1));
+        async () => {
+          await setDelegateProposal.execute(ProposalId.from(1));
         },
         {
           nonce: nonce++,

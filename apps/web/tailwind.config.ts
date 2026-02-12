@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+import { fontFamily } from "tailwindcss/defaultTheme";
 
 module.exports = {
   darkMode: ["class"],
@@ -8,7 +9,6 @@ module.exports = {
     "./containers/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
-    ".storybook/preview.tsx",
   ],
   theme: {
     container: {
@@ -74,11 +74,8 @@ module.exports = {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)"],
-        mono: ["var(--font-geist-mono)"],
-      },
-      letterSpacing: {
-        "balance-separator": "-0.1rem",
+        sans: ["var(--font-sans)", ...fontFamily.sans],
+        mono: ["var(--font-mono)", ...fontFamily.mono],
       },
     },
   },

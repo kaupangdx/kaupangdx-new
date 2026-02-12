@@ -1,11 +1,8 @@
-import { ArrowDown } from "lucide-react";
-import { Button } from "./button";
 import { Card } from "./card";
 import { Input } from "./input";
 import { TokenSelector } from "./token-selector";
-import { GeistMono } from "geist/font/mono";
 import { cn } from "@/lib/utils";
-import { USDBalance } from "./usd-balance";
+import { Balance } from "./balance";
 import { useFormContext } from "react-hook-form";
 
 export interface TokenInputProps {
@@ -15,6 +12,8 @@ export interface TokenInputProps {
   amountInputDisabled?: boolean;
   tokenInputHidden?: boolean;
   className?: string;
+  balance?: string;
+  onMaxClick?: () => void;
 }
 
 export function TokenInput({
@@ -24,6 +23,8 @@ export function TokenInput({
   amountInputDisabled,
   tokenInputHidden,
   className,
+  balance,
+  onMaxClick,
 }: TokenInputProps) {
   const form = useFormContext();
 
@@ -31,6 +32,21 @@ export function TokenInput({
     <Card className={cn(["rounded-2xl   px-4 py-4 pb-4", className])}>
       <div className="flex justify-between">
         <p className="text-sm text-muted-foreground">{label}</p>
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <span>Balance:</span>
+          <span className="font-mono">
+            <Balance balance={balance} />
+          </span>
+          {onMaxClick && (
+            <button
+              type="button"
+              onClick={onMaxClick}
+              className="ml-1 text-primary hover:text-primary/80"
+            >
+              Max
+            </button>
+          )}
+        </div>
       </div>
       <div className="mt-1.5 flex flex-row items-center justify-center">
         <Input
@@ -38,17 +54,13 @@ export function TokenInput({
           disabled={amountInputDisabled}
           placeholder="0"
           className={cn([
-            "mr-4 h-auto border-0  p-0 text-3xl focus-visible:ring-0 focus-visible:ring-offset-0",
-            GeistMono.className,
+            "mr-4 h-auto border-0  p-0 text-2xl focus-visible:ring-0 focus-visible:ring-offset-0 font-mono value number",
           ])}
         />
         {!tokenInputHidden && (
           <TokenSelector disabled={tokenInputDisabled} name={name} />
         )}
       </div>
-      <p className="mt-2 text-sm text-muted-foreground">
-        <USDBalance />
-      </p>
     </Card>
   );
 }

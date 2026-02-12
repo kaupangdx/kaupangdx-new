@@ -4,10 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { addPrecision, removePrecision } from "./add-liquidity-form";
 import BigNumber from "bignumber.js";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useWalletStore } from "@/lib/stores/wallet";
-import { useBalancesStore, useObserveBalance } from "@/lib/stores/balances";
+import { useBalance, useBalancesStore, useObserveBalance } from "@/lib/stores/balances";
 import { PoolKey, TokenPair, dijkstra, prepareGraph } from "chain";
 import { pools } from "@/tokens";
 import { TokenId } from "@proto-kit/library";
@@ -60,6 +60,8 @@ export function SwapForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       route: [],
+      tokenIn_token: "0", // MINA
+      tokenOut_token: "2", // BTC
     },
     reValidateMode: "onChange",
     mode: "onChange",
@@ -67,7 +69,8 @@ export function SwapForm() {
 
   const fields = form.getValues();
   const wallet = useWalletStore();
-  const balance = useObserveBalance(fields.tokenIn_token, wallet.wallet);
+  const tokenInBalance = useBalance(wallet.wallet, fields.tokenIn_token);
+  const tokenOutBalance = useBalance(wallet.wallet, fields.tokenOut_token);
 
   const routerPools = pools.map(([tokenA, tokenB]) => {
     const poolKey = PoolKey.fromTokenPair(
@@ -138,9 +141,17 @@ export function SwapForm() {
   }, [fields.tokenIn_token, fields.tokenOut_token, pool]);
 
   useEffect(() => {
-    walletBalance.current = balance ?? "0";
+    walletBalance.current = tokenInBalance ?? "0";
     form.formState.isDirty && form.trigger("tokenIn_amount");
-  }, [balance, form.formState.isDirty]);
+  }, [tokenInBalance, form.formState.isDirty]);
+
+  const handleMaxTokenIn = useCallback(() => {
+    if (!tokenInBalance) return;
+    form.setValue("tokenIn_amount", removePrecision(tokenInBalance), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }, [tokenInBalance, form]);
 
   const balances = useBalancesStore();
 
@@ -238,6 +249,14 @@ export function SwapForm() {
       setLoading(false);
     }
   };
+  
+    const changeTokens = useCallback(() => {
+    form.reset();
+    form.setValue("tokenOut_token", fields.tokenIn_token);
+    form.setValue("tokenIn_token", fields.tokenOut_token);
+
+    form.clearErrors();
+  }, [fields]);
 
   return (
     <Form {...form}>
@@ -246,6 +265,10 @@ export function SwapForm() {
           unitPrice={unitPrice}
           loading={loading}
           route={fields.route}
+          onChangeTokens={changeTokens}
+          tokenInBalance={tokenInBalance}
+          tokenOutBalance={tokenOutBalance}
+          onMaxTokenIn={handleMaxTokenIn}
         />
       </form>
     </Form>
