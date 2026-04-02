@@ -7,7 +7,7 @@ import {
 import { GovernanceLifecycleTransactionHook } from "./governance-life-cycle";
 
 export const modules = VanillaProtocolModules.with({
-  GovernanceLifecycle: GovernanceLifecycleTransactionHook,
+  // GovernanceLifecycle: GovernanceLifecycleTransactionHook,
 });
 
 export const config: ModulesConfig<typeof modules> = {
@@ -16,25 +16,25 @@ export const config: ModulesConfig<typeof modules> = {
     ...VanillaProtocolModules.defaultConfig().TransactionFee,
     feeRecipient: process.env.PROTOKIT_TRANSACTION_FEE_RECIPIENT_PUBLIC_KEY!,
   },
-  GovernanceLifecycle: {
-    goverancePeriodDurationInBlocks: 100n,
-    maximumGovernancePeriod: 3n,
-  },
+  // GovernanceLifecycle: {
+  //   goverancePeriodDurationInBlocks: 100n,
+  //   maximumGovernancePeriod: 3n,
+  // },
 } satisfies ModulesConfig<typeof modules>;
 
-
 export const settlementModules = {
-  SettlementContractModule: SettlementContractModule.from(SettlementContractModule.settlementAndBridging()),
+  SettlementContractModule: SettlementContractModule.from(
+    SettlementContractModule.settlementAndBridging()
+  ),
 } satisfies ProtocolModulesRecord;
-
 
 export const settlementModulesConfig = {
   SettlementContractModule: {
     SettlementContract: {},
     DispatchContract: {
-      incomingMessagesMethods:{}
+      incomingMessagesMethods: {},
     },
-    BridgeContract: {}
+    BridgeContract: {},
   },
 } satisfies ModulesConfig<typeof settlementModules>;
 

@@ -12,7 +12,7 @@ export const modules = {
   Faucet,
   Locks,
   Balances: Balances,
-  SetDelegateProposal,
+  // SetDelegateProposal,
   OutgoingMessages,
   TokenRegistry,
   XYK,
@@ -26,12 +26,12 @@ export const config: ModulesConfig<
   },
   Faucet: {},
   Locks: {},
-  SetDelegateProposal: {
-    stakeTokenId: 0n,
-    maximumAllowedConvictionMultiplier: 3n,
-    precisionDivider: 1000000n, // equivalent to 0,000001%
-    minimalRequiredWeightPercentageToPropose: 1n,
-  },
+  // SetDelegateProposal: {
+  //   stakeTokenId: 0n,
+  //   maximumAllowedConvictionMultiplier: 3n,
+  //   precisionDivider: 1000000n, // equivalent to 0,000001%
+  //   minimalRequiredWeightPercentageToPropose: 1n,
+  // },
   OutgoingMessages: {},
   TokenRegistry: {},
   XYK: {
