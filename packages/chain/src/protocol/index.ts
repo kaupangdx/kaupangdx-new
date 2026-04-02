@@ -32,7 +32,9 @@ export const settlementModulesConfig = {
   SettlementContractModule: {
     SettlementContract: {},
     DispatchContract: {
-      incomingMessagesMethods: {},
+      incomingMessagesMethods: {
+        deposit: "Balances.deposit",
+      },
     },
     BridgeContract: {},
   },
