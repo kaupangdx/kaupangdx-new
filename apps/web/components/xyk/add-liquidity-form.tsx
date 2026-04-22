@@ -2,17 +2,20 @@ import { useFormContext } from "react-hook-form";
 import { Button } from "../ui/button";
 import { TokenInput } from "../ui/token-input";
 import { ArrowDown } from "lucide-react";
+import { handleMissingWallet } from "@/lib/stores/wallet";
 
 export interface AddLiquidityFormProps {
   loading: boolean;
   poolExists: boolean;
   onChangeTokens: () => void;
+  walletInstalled: boolean;
 }
 
 export function AddLiquidityForm({
   loading,
   poolExists,
   onChangeTokens,
+  walletInstalled,
 }: AddLiquidityFormProps) {
   const form = useFormContext();
   const error = Object.values(form.formState.errors)[0]?.message?.toString();
@@ -53,10 +56,13 @@ export function AddLiquidityForm({
       <Button
         loading={loading}
         type={"submit"}
-        disabled={!form.formState.isValid}
+        disabled={walletInstalled && !form.formState.isValid}
         className="mt-4 h-12 w-full rounded-lg px-10 text-lg"
+        onClick={() => handleMissingWallet(walletInstalled)}
       >
-        {error ?? (poolExists ? "Add liquidity" : "Create pool")}
+        {!walletInstalled
+          ? "Install Auro Wallet"
+          : (error ?? (poolExists ? "Add liquidity" : "Create pool"))}
       </Button>
     </>
   );

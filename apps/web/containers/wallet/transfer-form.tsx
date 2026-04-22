@@ -93,7 +93,10 @@ export function TransferForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <TransferFormComponent loading={false} />
+        <TransferFormComponent
+          loading={false}
+          walletInstalled={wallet.walletInstalled}
+        />
       </form>
     </Form>
   );

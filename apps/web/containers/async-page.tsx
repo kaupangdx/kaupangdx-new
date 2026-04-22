@@ -18,8 +18,13 @@ import { SwapForm } from "./xyk/swap-form";
 import { TransferForm } from "./wallet/transfer-form";
 
 export default function Home() {
-  const { connectWallet, wallet, observeWalletChange, initializeWallet } =
-    useWalletStore();
+  const {
+    connectWallet,
+    wallet,
+    observeWalletChange,
+    initializeWallet,
+    walletInstalled,
+  } = useWalletStore();
   const client = useClientStore();
 
   const {
@@ -65,6 +70,7 @@ export default function Home() {
             blockHeight={block?.height}
             address={wallet}
             balances={ownBalances}
+            walletInstalled={walletInstalled}
             onConnectWallet={async () => {
               await connectWallet();
             }}

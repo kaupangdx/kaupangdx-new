@@ -4,12 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useObservePool,
-  useRemoveLiquidity,
-} from "@/lib/stores/xyk";
+import { useObservePool, useRemoveLiquidity } from "@/lib/stores/xyk";
 import BigNumber from "bignumber.js";
-import { LPTokenId} from "chain";
+import { LPTokenId } from "chain";
 import {
   useObserveBalance,
   useObserveTotalSupply,
@@ -215,6 +212,7 @@ export function RemoveLiquidityForm() {
           onChangeTokens={changeTokens}
           poolExists={pool?.exists ?? true}
           loading={loading}
+          walletInstalled={useWalletStore().walletInstalled}
         />
       </form>
     </Form>
