@@ -246,6 +246,7 @@ export function SwapForm() {
           unitPrice={unitPrice}
           loading={loading}
           route={fields.route}
+          walletInstalled={wallet.walletInstalled}
         />
       </form>
     </Form>

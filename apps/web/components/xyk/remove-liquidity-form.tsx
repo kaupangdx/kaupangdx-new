@@ -4,17 +4,20 @@ import { TokenInput } from "../ui/token-input";
 import { Card } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { ArrowDown } from "lucide-react";
+import { handleMissingWallet } from "@/lib/stores/wallet";
 
 export interface RemoveLiquidityFormProps {
   loading: boolean;
   poolExists: boolean;
   onChangeTokens: () => void;
+  walletInstalled: boolean;
 }
 
 export function RemoveLiquidityForm({
   loading,
   poolExists,
   onChangeTokens,
+  walletInstalled,
 }: RemoveLiquidityFormProps) {
   const form = useFormContext();
   const error = Object.values(form.formState.errors)[0]?.message?.toString();
@@ -55,10 +58,11 @@ export function RemoveLiquidityForm({
       <Button
         loading={loading}
         type={"submit"}
-        disabled={!form.formState.isValid}
+        disabled={walletInstalled && !form.formState.isValid}
         className="mt-4 h-12 w-full rounded-lg px-10 text-lg"
+        onClick={() => handleMissingWallet(walletInstalled)}
       >
-        Remove liquidity
+        {!walletInstalled ? "Install Auro Wallet" : "Remove liquidity"}
       </Button>
     </>
   );

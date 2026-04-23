@@ -215,6 +215,7 @@ export function AddLiquidityForm() {
           onChangeTokens={changeTokens}
           poolExists={pool?.exists ?? true}
           loading={loading}
+          walletInstalled={useWalletStore().walletInstalled}
         />
       </form>
     </Form>

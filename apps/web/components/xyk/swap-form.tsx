@@ -12,14 +12,21 @@ import { cn } from "@/lib/utils";
 import { USDBalance } from "../ui/usd-balance";
 import { useFormContext } from "react-hook-form";
 import { tokens } from "@/tokens";
+import { handleMissingWallet } from "@/lib/stores/wallet";
 
 export interface SwapFormProps {
   loading: boolean;
   route: string[];
   unitPrice?: string;
+  walletInstalled: boolean;
 }
 
-export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
+export function SwapForm({
+  loading,
+  route,
+  unitPrice,
+  walletInstalled,
+}: SwapFormProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const form = useFormContext();
   const error = Object.values(form.formState.errors)[0]?.message?.toString();
@@ -61,16 +68,17 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
 
       <Button
         loading={loading}
-        disabled={!form.formState.isValid}
+        disabled={walletInstalled && !form.formState.isValid}
         className="mt-4 h-12 w-full rounded-lg px-10 text-lg"
+        onClick={() => handleMissingWallet(walletInstalled)}
       >
-        {error ?? "Swap"}
+        {!walletInstalled ? "Install Auro Wallet" : (error ?? "Swap")}
       </Button>
 
       <Collapsible onOpenChange={setDetailsOpen}>
         <div className="mt-4 flex justify-between">
           <div className="flex items-center">
-            <p className={cn("mr-1.5 text-sm font-mono")}>
+            <p className={cn("mr-1.5 font-mono text-sm")}>
               {unitPriceWrapped ? (
                 `1 ${unitPriceWrapped.tokenIn} = ${unitPrice} ${unitPriceWrapped.tokenOut}`
               ) : (
@@ -78,11 +86,7 @@ export function SwapForm({ loading, route, unitPrice }: SwapFormProps) {
               )}
             </p>
             {unitPriceWrapped && (
-              <p
-                className={cn(
-                  "text-sm text-muted-foreground font-mono",
-                )}
-              >
+              <p className={cn("font-mono text-sm text-muted-foreground")}>
                 (<USDBalance />)
               </p>
             )}

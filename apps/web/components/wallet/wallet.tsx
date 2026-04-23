@@ -11,8 +11,8 @@ import { Balance } from "../ui/balance";
 import { USDBalance } from "../ui/usd-balance";
 // @ts-ignore
 import truncateMiddle from "truncate-middle";
-import {tokens} from "@/tokens";
-
+import { tokens } from "@/tokens";
+import { handleMissingWallet } from "@/lib/stores/wallet";
 
 export interface Balances {
   [tokenId: string]: string | undefined;
@@ -23,6 +23,7 @@ export interface WalletProps {
   blockHeight?: string;
   balances?: Balances;
   loading: boolean;
+  walletInstalled: boolean;
   onConnectWallet: () => void;
   onFaucetDrip: () => void;
   forceIsWalletOpen: boolean;
@@ -33,6 +34,7 @@ export function Wallet({
   blockHeight,
   balances,
   loading,
+  walletInstalled,
   onConnectWallet,
   forceIsWalletOpen,
   onFaucetDrip,
@@ -72,6 +74,7 @@ export function Wallet({
             setIsWalletDoneTransitioning(true);
           }, 300);
 
+          handleMissingWallet(walletInstalled);
           !address && !isWalletOpen && onConnectWallet();
           address && setIsWalletOpen(!isWalletOpen);
         }}
@@ -97,7 +100,11 @@ export function Wallet({
               },
             ])}
           >
-            {address ? "Open wallet" : "Connect wallet"}
+            {!walletInstalled
+              ? "Install Auro Wallet"
+              : address
+                ? "Open wallet"
+                : "Connect wallet"}
           </p>
         </Button>
       </div>
@@ -141,7 +148,7 @@ export function Wallet({
               </p>
               <p
                 className={cn(
-                  "max-w-32 text-sm text-muted-foreground font-mono",
+                  "max-w-32 font-mono text-sm text-muted-foreground",
                 )}
               >
                 <USDBalance balance={undefined} />
@@ -156,7 +163,10 @@ export function Wallet({
               <div className="grid gap-2">
                 {Object.entries(balances ?? {}).map(([tokenId, balance]) => {
                   const token = tokens[tokenId];
-                  if (!token || (BigInt(tokenId) > BigInt(3) && balance === "0"))
+                  if (
+                    !token ||
+                    (BigInt(tokenId) > BigInt(3) && balance === "0")
+                  )
                     return null;
                   return (
                     <div className="flex items-center justify-between">
@@ -175,7 +185,7 @@ export function Wallet({
                         </p>
                         <p
                           className={cn(
-                            "text-sm text-muted-foreground font-mono",
+                            "font-mono text-sm text-muted-foreground",
                           )}
                         >
                           <USDBalance balance={undefined} />
